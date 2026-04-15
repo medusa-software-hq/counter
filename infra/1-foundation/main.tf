@@ -57,12 +57,6 @@ resource "google_storage_bucket" "assets_bucket" {
   force_destroy               = true # This project is experimental
 }
 
-resource "google_storage_bucket_iam_member" "assets_bucket_public_reader" {
-  bucket = google_storage_bucket.assets_bucket.name
-  role   = "roles/storage.objectViewer"
-  member = "allUsers"
-}
-
 # Root files bucket — index.html and other short-lived entry-point files.
 resource "google_storage_bucket" "root_bucket" {
   project                     = var.gcp_project_id
@@ -77,12 +71,6 @@ resource "google_storage_bucket" "root_bucket" {
     # Return index.html for any path not found in the bucket (SPA client-side routing fallback)
     not_found_page = "index.html"
   }
-}
-
-resource "google_storage_bucket_iam_member" "root_bucket_public_reader" {
-  bucket = google_storage_bucket.root_bucket.name
-  role   = "roles/storage.objectViewer"
-  member = "allUsers"
 }
 
 # %% Outputs %%

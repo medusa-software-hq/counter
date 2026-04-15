@@ -35,6 +35,11 @@ resource "github_repository" "this" {
   delete_branch_on_merge = true
 }
 
+locals {
+  # Discovered manually
+  gh_actions_integration_id = 15368
+}
+
 resource "github_repository_ruleset" "default_branch" {
   name        = "Default branch"
   repository  = github_repository.this.name
@@ -62,15 +67,18 @@ resource "github_repository_ruleset" "default_branch" {
 
     required_status_checks {
       required_check {
-        context = "pre-commit"
+        context        = "pre-commit"
+        integration_id = local.gh_actions_integration_id
       }
 
       required_check {
-        context = "Build (counter-web)"
+        context        = "Build (counter-web)"
+        integration_id = local.gh_actions_integration_id
       }
 
       required_check {
-        context = "Terraform Plan (foundation)"
+        context        = "Terraform Plan (foundation)"
+        integration_id = local.gh_actions_integration_id
       }
 
       strict_required_status_checks_policy = true
