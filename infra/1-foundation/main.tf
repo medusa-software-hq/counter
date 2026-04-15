@@ -21,10 +21,6 @@ terraform {
       source  = "cloudflare/cloudflare"
       version = "~> 5.18"
     }
-    google-beta = {
-      source  = "hashicorp/google-beta"
-      version = "~> 7.25"
-    }
   }
 }
 
@@ -53,11 +49,6 @@ variable "cloudflare_zone_id" {
 # %% Providers %%
 
 provider "google" {
-  project = var.gcp_project_id
-  region  = module.common.gcp_primary_location
-}
-
-provider "google-beta" {
   project = var.gcp_project_id
   region  = module.common.gcp_primary_location
 }
@@ -101,24 +92,27 @@ resource "google_storage_bucket" "root_bucket" {
   }
 }
 
-# Grant Cloud CDN's fill service account read access to both buckets.
-# google_compute_backend_bucket uses this identity to fetch objects from private buckets.
-resource "google_project_service_identity" "cloud_cdn_sa" {
-  provider = google-beta
-  project  = var.gcp_project_id
-  service  = "compute.googleapis.com"
+data "google_project" "project" {
+  project_id = var.gcp_project_id
 }
+
+locals {
+  # The CDN fill SA email is documented here: https://docs.cloud.google.com/cdn/docs/using-signed-urls#configure_permissions
+  cloud_cdn_sa = "serviceAccount:service-${data.google_project.project.number}@cloud-cdn-fill.iam.gserviceaccount.com"
+}
+
+# Grant Cloud CDN's fill service account read access to both buckets.
 
 resource "google_storage_bucket_iam_member" "assets_bucket_cdn_reader" {
   bucket = google_storage_bucket.assets_bucket.name
   role   = "roles/storage.objectViewer"
-  member = "serviceAccount:${google_project_service_identity.cloud_cdn_sa.email}"
+  member = local.cloud_cdn_sa
 }
 
 resource "google_storage_bucket_iam_member" "root_bucket_cdn_reader" {
   bucket = google_storage_bucket.root_bucket.name
   role   = "roles/storage.objectViewer"
-  member = "serviceAccount:${google_project_service_identity.cloud_cdn_sa.email}"
+  member = local.cloud_cdn_sa
 }
 
 # %% Backend: Cloud Storage buckets served via Cloud CDN %%
