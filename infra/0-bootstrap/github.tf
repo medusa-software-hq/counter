@@ -18,7 +18,7 @@ provider "github" {
 # Has to be imported:
 # terraform import github_repository.app_repo $GH_APP_REPO_NAME
 resource "github_repository" "this" {
-  name       = module.common.gh_app_repo_name
+  name       = module.common.gh_repo_name
   visibility = "private"
 
   has_discussions = false
@@ -66,7 +66,11 @@ resource "github_repository_ruleset" "default_branch" {
       }
 
       required_check {
-        context = "build-counter-web"
+        context = "Build (counter-web)"
+      }
+
+      required_check {
+        context = "Terraform Plan (foundation)"
       }
 
       strict_required_status_checks_policy = true
@@ -78,4 +82,18 @@ resource "github_actions_repository_permissions" "this" {
   repository      = github_repository.this.name
   enabled         = true
   allowed_actions = "all"
+}
+
+# Actions variables consumed by CI/CD jobs
+
+resource "github_actions_variable" "gcp_project_id" {
+  repository    = github_repository.this.name
+  variable_name = "GCP_PROJECT_ID"
+  value         = google_project.gcp_project.project_id
+}
+
+resource "github_actions_variable" "gcp_ci_cd_sa_email" {
+  repository    = github_repository.this.name
+  variable_name = "GCP_CI_CD_SA_EMAIL"
+  value         = google_service_account.ci_cd_sa.email
 }
