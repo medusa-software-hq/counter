@@ -57,6 +57,19 @@ provider "cloudflare" {
   api_token = var.cloudflare_api_token
 }
 
+# %% Project data %%
+
+data "google_project" "project" {
+  project_id = var.gcp_project_id
+}
+
+locals {
+  ttl_1y = 31536000 # 1 year in seconds
+
+  # Cloud Run serverless robot SA — invokes Cloud Run on behalf of the ALB NEG
+  cloud_run_robot_sa = "serviceAccount:service-${data.google_project.project.number}@serverless-robot-prod.iam.gserviceaccount.com"
+}
+
 # %% Frontend Cloud Storage buckets %%
 
 resource "random_id" "assets_bucket_random_id" {
@@ -67,7 +80,8 @@ resource "random_id" "root_bucket_random_id" {
   byte_length = 4
 }
 
-# Vite content-hashed files (e.g. index-CWPHXiaZ.js) under /assets/*. Long-lived, immutable files.
+# Public assets bucket — CSS, images. Served via Cloud CDN. JS is intentionally excluded
+# (served IAP-protected via Cloud Run from the root bucket instead).
 resource "google_storage_bucket" "assets_bucket" {
   project                     = var.gcp_project_id
   name                        = "${module.common.project_base_name}-assets-${random_id.assets_bucket_random_id.hex}"
@@ -76,55 +90,117 @@ resource "google_storage_bucket" "assets_bucket" {
   force_destroy               = true # This project is experimental
 }
 
-# Root files bucket — index.html and other short-lived entry-point files.
+# The assets bucket is public — the org-level iam.allowedPolicyMemberDomains constraint
+# is overridden at the project level in 0-bootstrap to allow this.
+resource "google_storage_bucket_iam_member" "assets_bucket_public_reader" {
+  bucket = google_storage_bucket.assets_bucket.name
+  role   = "roles/storage.objectViewer"
+  member = "allUsers"
+}
+
+# Root bucket — index.html and JS bundles. Served IAP-protected via Cloud Run.
 resource "google_storage_bucket" "root_bucket" {
   project                     = var.gcp_project_id
   name                        = "${module.common.project_base_name}-root-${random_id.root_bucket_random_id.hex}"
   location                    = module.common.gcp_primary_location
   uniform_bucket_level_access = true
   force_destroy               = true # This project is experimental
+}
 
-  website {
-    # Serve index.html for the bucket root
-    main_page_suffix = "index.html"
-    # Return index.html for any path not found in the bucket (SPA client-side routing fallback)
-    not_found_page = "index.html"
+# %% Cloud Run: nginx serving root bucket via GCS volume mount %%
+
+# Dedicated service account for the Cloud Run frontend service.
+resource "google_service_account" "frontend_sa" {
+  project      = var.gcp_project_id
+  account_id   = "${module.common.project_base_name}-frontend"
+  display_name = "Frontend Cloud Run Service Account"
+}
+
+# Grant the frontend SA read access to the root bucket.
+resource "google_storage_bucket_iam_member" "root_bucket_run_reader" {
+  bucket = google_storage_bucket.root_bucket.name
+  role   = "roles/storage.objectViewer"
+  member = "serviceAccount:${google_service_account.frontend_sa.email}"
+}
+
+# nginx serves the mounted root bucket (index.html + JS bundles) behind IAP.
+# Gen2 execution environment is required for GCS volume mounts.
+resource "google_cloud_run_v2_service" "frontend" {
+  name                = "${module.common.project_base_name}-frontend"
+  location            = module.common.gcp_primary_location
+  deletion_protection = false # This project is experimental
+  ingress             = "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCING"
+
+  template {
+    service_account       = google_service_account.frontend_sa.email
+    execution_environment = "EXECUTION_ENVIRONMENT_GEN2"
+
+    containers {
+      image = "nginx:alpine"
+
+      volume_mounts {
+        name       = "root-bucket"
+        mount_path = "/usr/share/nginx/html"
+      }
+    }
+
+    volumes {
+      name = "root-bucket"
+      gcs {
+        bucket    = google_storage_bucket.root_bucket.name
+        read_only = true
+      }
+    }
+  }
+
+  traffic {
+    type    = "TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST"
+    percent = 100
   }
 }
 
-data "google_project" "project" {
-  project_id = var.gcp_project_id
+# Allow the ALB serverless NEG to invoke the Cloud Run frontend service.
+resource "google_cloud_run_v2_service_iam_member" "frontend_invoker_alb" {
+  project  = var.gcp_project_id
+  location = module.common.gcp_primary_location
+  name     = google_cloud_run_v2_service.frontend.name
+  role     = "roles/run.invoker"
+  member   = local.cloud_run_robot_sa
 }
 
-locals {
-  # The CDN fill SA email is documented here: https://docs.cloud.google.com/cdn/docs/using-signed-urls#configure_permissions
-  cloud_cdn_sa = "serviceAccount:service-${data.google_project.project.number}@cloud-cdn-fill.iam.gserviceaccount.com"
+# %% IAP %%
+
+# IAP OAuth brand (consent screen). Only one brand per project is allowed.
+resource "google_iap_brand" "brand" {
+  support_email     = "support@${module.common.organization_domain}"
+  application_title = module.common.project_base_name
+  project           = var.gcp_project_id
 }
 
-# Grant Cloud CDN's fill service account read access to both buckets.
-
-resource "google_storage_bucket_iam_member" "assets_bucket_cdn_reader" {
-  bucket = google_storage_bucket.assets_bucket.name
-  role   = "roles/storage.objectViewer"
-  member = local.cloud_cdn_sa
+# IAP OAuth client used by the ALB backend service.
+resource "google_iap_client" "iap_client" {
+  display_name = "${module.common.project_base_name} IAP Client"
+  brand        = google_iap_brand.brand.name
 }
 
-resource "google_storage_bucket_iam_member" "root_bucket_cdn_reader" {
-  bucket = google_storage_bucket.root_bucket.name
-  role   = "roles/storage.objectViewer"
-  member = local.cloud_cdn_sa
+# %% External Application Load Balancer %%
+
+resource "google_compute_global_address" "alb_ip" {
+  name = "${module.common.project_base_name}-alb-ip"
 }
 
-# %% Backend: Cloud Storage buckets served via Cloud CDN %%
+resource "google_compute_managed_ssl_certificate" "cert" {
+  name = "${module.common.project_base_name}-cert"
 
-locals {
-  ttl_zero = 0
-  ttl_1y   = 31536000 # 1 year in seconds
+  managed {
+    domains = ["${module.common.project_base_name}.${module.common.organization_domain}"]
+  }
 }
 
-# Backend bucket for Vite content-hashed assets (/assets/*).
-# FORCE_CACHE_ALL overrides any GCS object metadata — safe here because all objects
-# in this bucket are immutable (new deploy = new filename).
+# %%% Backend: assets bucket (CSS + images, public CDN) %%%
+
+# Content-hashed CSS and images served via Cloud CDN with a 1-year TTL.
+# JS bundles are intentionally excluded — they are served IAP-protected via Cloud Run.
 resource "google_compute_backend_bucket" "assets_backend" {
   name        = "${module.common.project_base_name}-assets-backend"
   bucket_name = google_storage_bucket.assets_bucket.name
@@ -145,56 +221,63 @@ resource "google_compute_backend_bucket" "assets_backend" {
   }
 }
 
-# Backend bucket for root files (index.html, etc.).
-# These reference hashed asset filenames and must never be served stale.
-# FORCE_CACHE_ALL with zero TTLs means the CDN revalidates on every request.
-resource "google_compute_backend_bucket" "root_backend" {
-  name        = "${module.common.project_base_name}-root-backend"
-  bucket_name = google_storage_bucket.root_bucket.name
-  enable_cdn  = true
+# %%% Backend: Cloud Run frontend service (HTML + JS, IAP-protected) %%%
 
-  cdn_policy {
-    cache_mode  = "FORCE_CACHE_ALL"
-    default_ttl = local.ttl_zero
-    max_ttl     = local.ttl_zero
-    client_ttl  = local.ttl_zero
+resource "google_compute_region_network_endpoint_group" "frontend_neg" {
+  name                  = "${module.common.project_base_name}-frontend-neg"
+  network_endpoint_type = "SERVERLESS"
+  region                = module.common.gcp_primary_location
 
-    negative_caching = true
+  cloud_run {
+    service = google_cloud_run_v2_service.frontend.name
   }
 }
 
-# %% External Application Load Balancer %%
+resource "google_compute_backend_service" "frontend_backend" {
+  name                  = "${module.common.project_base_name}-frontend-backend"
+  load_balancing_scheme = "EXTERNAL_MANAGED"
+  protocol              = "HTTPS"
 
-resource "google_compute_global_address" "alb_ip" {
-  name = "${module.common.project_base_name}-alb-ip"
-}
+  backend {
+    group = google_compute_region_network_endpoint_group.frontend_neg.id
+  }
 
-resource "google_compute_managed_ssl_certificate" "cert" {
-  name = "${module.common.project_base_name}-cert"
-
-  managed {
-    domains = ["${module.common.project_base_name}.${module.common.organization_domain}"]
+  iap {
+    enabled              = true
+    oauth2_client_id     = google_iap_client.iap_client.client_id
+    oauth2_client_secret = google_iap_client.iap_client.secret
   }
 }
+
+# Grant all org-domain users access through IAP.
+resource "google_iap_web_backend_service_iam_member" "frontend_iap_org_users" {
+  project             = var.gcp_project_id
+  web_backend_service = google_compute_backend_service.frontend_backend.name
+  role                = "roles/iap.httpsResourceAccessor"
+  member              = "domain:${module.common.organization_domain}"
+}
+
+# %%% URL map %%%
 
 resource "google_compute_url_map" "url_map" {
   name            = "${module.common.project_base_name}-url-map"
-  default_service = google_compute_backend_bucket.root_backend.id
-
-  path_matcher {
-    name            = "paths"
-    default_service = google_compute_backend_bucket.root_backend.id
-
-    # Route Vite content-hashed assets to the assets bucket (long CDN cache).
-    path_rule {
-      paths   = ["/assets/*"]
-      service = google_compute_backend_bucket.assets_backend.id
-    }
-  }
+  default_service = google_compute_backend_service.frontend_backend.id
 
   host_rule {
     hosts        = ["${module.common.project_base_name}.${module.common.organization_domain}"]
     path_matcher = "paths"
+  }
+
+  path_matcher {
+    name            = "paths"
+    default_service = google_compute_backend_service.frontend_backend.id
+
+    # CSS, images, fonts — public CDN, long cache.
+    # JS is at /js/* (not /assets/*) so this rule never matches JS bundles.
+    path_rule {
+      paths   = ["/assets/*"]
+      service = google_compute_backend_bucket.assets_backend.id
+    }
   }
 }
 
@@ -229,12 +312,12 @@ resource "cloudflare_dns_record" "app_dns" {
 # %% Outputs %%
 
 output "assets_bucket_name" {
-  description = "Name of the Cloud Storage bucket holding Vite content-hashed frontend assets (/assets/*)."
+  description = "Name of the Cloud Storage bucket holding public CSS and image assets."
   value       = google_storage_bucket.assets_bucket.name
 }
 
 output "root_bucket_name" {
-  description = "Name of the Cloud Storage bucket holding root frontend files (index.html, etc.)."
+  description = "Name of the Cloud Storage bucket holding IAP-protected HTML and JS bundles."
   value       = google_storage_bucket.root_bucket.name
 }
 

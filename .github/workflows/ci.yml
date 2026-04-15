@@ -187,8 +187,8 @@ jobs:
           name: counter-web-dist
           path: dist/
 
-      - name: Upload hashed assets to Cloud Storage
+      - name: Upload assets to assets bucket (public CDN)
         run: gcloud storage rsync -r dist/assets/ gs://${{ env.ASSETS_BUCKET }}/assets/
 
-      - name: Upload root files to Cloud Storage
-        run: gcloud storage rsync -r --exclude="assets/.*" dist/ gs://${{ env.ROOT_BUCKET }}/
+      - name: Upload JS and HTML to root bucket (IAP)
+        run: gcloud storage rsync -r --exclude="^assets/" dist/ gs://${{ env.ROOT_BUCKET }}/
