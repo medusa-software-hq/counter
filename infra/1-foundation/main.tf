@@ -65,6 +65,7 @@ data "google_project" "project" {
 
 locals {
   ttl_1y = 31536000 # 1 year in seconds
+  ttl_auto = 1 # means "automatic" in Cloudflare
 
   # Cloud Run serverless robot SA — invokes Cloud Run on behalf of the ALB NEG
   cloud_run_robot_sa = "serviceAccount:service-${data.google_project.project.number}@serverless-robot-prod.iam.gserviceaccount.com"
@@ -291,7 +292,7 @@ resource "cloudflare_dns_record" "app_dns" {
   type    = "A"
   name    = module.common.project_base_name
   content = google_compute_global_address.alb_ip.address
-  ttl     = 3600
+  ttl     = local.ttl_auto
 
   # Keep proxying off so GCP-managed SSL certificate provisioning (ACME HTTP-01 challenge
   # directly to the IP) works correctly.
