@@ -87,6 +87,7 @@ resource "google_project_service" "apis" {
     "cloudresourcemanager.googleapis.com",
     "storage.googleapis.com",
     "compute.googleapis.com",
+    "serviceusage.googleapis.com",
   ])
 
   project            = google_project.gcp_project.id
