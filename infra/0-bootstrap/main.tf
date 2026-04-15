@@ -86,6 +86,7 @@ resource "google_project_service" "apis" {
     "iamcredentials.googleapis.com",
     "cloudresourcemanager.googleapis.com",
     "storage.googleapis.com",
+    "compute.googleapis.com",
   ])
 
   project            = google_project.gcp_project.id
@@ -134,6 +135,13 @@ resource "google_storage_bucket_iam_member" "ci_cd_sa_object_admin" {
 resource "google_project_iam_member" "ci_cd_sa_storage_admin" {
   project = local.gcp_project_id
   role    = "roles/storage.admin"
+  member  = "serviceAccount:${google_service_account.ci_cd_sa.email}"
+}
+
+# Grant GitHub Actions SA compute admin on the GCP project (manage ALB, URL maps, SSL certs)
+resource "google_project_iam_member" "ci_cd_sa_compute_admin" {
+  project = local.gcp_project_id
+  role    = "roles/compute.admin"
   member  = "serviceAccount:${google_service_account.ci_cd_sa.email}"
 }
 
