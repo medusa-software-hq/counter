@@ -13,6 +13,10 @@ terraform {
       source  = "hashicorp/google"
       version = "~> 7.25"
     }
+    google-beta = {
+      source  = "hashicorp/google-beta"
+      version = "~> 7.25"
+    }
     random = {
       source  = "hashicorp/random"
       version = "~> 3.8"
@@ -53,6 +57,11 @@ provider "google" {
   region  = module.common.gcp_primary_location
 }
 
+provider "google-beta" {
+  project = var.gcp_project_id
+  region  = module.common.gcp_primary_location
+}
+
 provider "cloudflare" {
   api_token = var.cloudflare_api_token
 }
@@ -64,7 +73,8 @@ data "google_project" "project" {
 }
 
 locals {
-  ttl_1y = 31536000 # 1 year in seconds
+  ttl_1y   = 31536000 # 1 year in seconds
+  ttl_auto = 1        # means "automatic" in Cloudflare
 
   # Cloud Run serverless robot SA — invokes Cloud Run on behalf of the ALB NEG
   cloud_run_robot_sa = "serviceAccount:service-${data.google_project.project.number}@serverless-robot-prod.iam.gserviceaccount.com"
@@ -163,6 +173,17 @@ resource "google_cloud_run_v2_service" "frontend" {
   }
 }
 
+# %% IAP service agent %%
+
+# Ensure the IAP managed service agent exists for this project.
+# Equivalent to: gcloud beta services identity create --service=iap.googleapis.com
+# The resource is a no-op on update/destroy, so it is safe to declare here.
+resource "google_project_service_identity" "iap_sa" {
+  provider = google-beta
+  project  = var.gcp_project_id
+  service  = "iap.googleapis.com"
+}
+
 # Allow the ALB serverless NEG to invoke the Cloud Run frontend service.
 resource "google_cloud_run_v2_service_iam_member" "frontend_invoker_alb" {
   project  = var.gcp_project_id
@@ -170,6 +191,15 @@ resource "google_cloud_run_v2_service_iam_member" "frontend_invoker_alb" {
   name     = google_cloud_run_v2_service.frontend.name
   role     = "roles/run.invoker"
   member   = local.cloud_run_robot_sa
+}
+
+# Allow the IAP managed service agent to invoke the Cloud Run frontend service.
+resource "google_cloud_run_v2_service_iam_member" "frontend_invoker_iap" {
+  project  = var.gcp_project_id
+  location = module.common.gcp_primary_location
+  name     = google_cloud_run_v2_service.frontend.name
+  role     = "roles/run.invoker"
+  member   = google_project_service_identity.iap_sa.member
 }
 
 # %% IAP %%
@@ -181,7 +211,10 @@ resource "google_compute_global_address" "alb_ip" {
 }
 
 resource "google_compute_managed_ssl_certificate" "cert" {
-  name = "${module.common.project_base_name}-cert"
+  # Named counter-cert-2 after the original counter-cert was manually recreated to
+  # fix a FAILED_NOT_VISIBLE state. Can be renamed back to counter-cert once cert-2
+  # is stable and state is clean.
+  name = "${module.common.project_base_name}-cert-2"
 
   managed {
     domains = ["${module.common.project_base_name}.${module.common.organization_domain}"]
@@ -291,7 +324,7 @@ resource "cloudflare_dns_record" "app_dns" {
   type    = "A"
   name    = module.common.project_base_name
   content = google_compute_global_address.alb_ip.address
-  ttl     = 3600
+  ttl     = local.ttl_auto
 
   # Keep proxying off so GCP-managed SSL certificate provisioning (ACME HTTP-01 challenge
   # directly to the IP) works correctly.
