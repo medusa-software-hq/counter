@@ -65,6 +65,10 @@ resource "github_repository_ruleset" "default_branch" {
         context = "pre-commit"
       }
 
+      required_check {
+        context = "build-counter-web"
+      }
+
       strict_required_status_checks_policy = true
     }
   }
