@@ -88,6 +88,9 @@ resource "google_project_service" "apis" {
     "storage.googleapis.com",
     "compute.googleapis.com",
     "serviceusage.googleapis.com",
+    "run.googleapis.com",
+    "iap.googleapis.com",
+    "orgpolicy.googleapis.com",
   ])
 
   project            = google_project.gcp_project.id
@@ -144,6 +147,42 @@ resource "google_project_iam_member" "ci_cd_sa_compute_admin" {
   project = local.gcp_project_id
   role    = "roles/compute.admin"
   member  = "serviceAccount:${google_service_account.ci_cd_sa.email}"
+}
+
+# Grant GitHub Actions SA Cloud Run admin (deploy Cloud Run services)
+resource "google_project_iam_member" "ci_cd_sa_run_admin" {
+  project = local.gcp_project_id
+  role    = "roles/run.admin"
+  member  = "serviceAccount:${google_service_account.ci_cd_sa.email}"
+}
+
+# Grant GitHub Actions SA IAP admin (manage IAP brands, clients, policies)
+resource "google_project_iam_member" "ci_cd_sa_iap_admin" {
+  project = local.gcp_project_id
+  role    = "roles/iap.admin"
+  member  = "serviceAccount:${google_service_account.ci_cd_sa.email}"
+}
+
+# Grant GitHub Actions SA org policy admin (set project-level org policy overrides)
+resource "google_project_iam_member" "ci_cd_sa_orgpolicy_admin" {
+  project = local.gcp_project_id
+  role    = "roles/orgpolicy.policyAdmin"
+  member  = "serviceAccount:${google_service_account.ci_cd_sa.email}"
+}
+
+# Override the org-level iam.allowedPolicyMemberDomains constraint at the project level
+# to allow allUsers on the public assets bucket (CSS, images).
+resource "google_org_policy_policy" "allow_all_iam_members" {
+  name   = "projects/${local.gcp_project_id}/policies/iam.allowedPolicyMemberDomains"
+  parent = "projects/${local.gcp_project_id}"
+
+  spec {
+    rules {
+      allow_all = "TRUE"
+    }
+  }
+
+  depends_on = [google_project_service.apis["orgpolicy.googleapis.com"]]
 }
 
 # %% Outputs %%
