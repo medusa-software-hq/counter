@@ -138,6 +138,10 @@ resource "google_cloud_run_v2_service" "frontend" {
     containers {
       image = "nginx:alpine"
 
+      ports {
+        container_port = 80
+      }
+
       volume_mounts {
         name       = "root-bucket"
         mount_path = "/usr/share/nginx/html"
