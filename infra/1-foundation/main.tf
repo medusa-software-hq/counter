@@ -170,19 +170,6 @@ resource "google_cloud_run_v2_service_iam_member" "frontend_invoker_alb" {
 
 # %% IAP %%
 
-# IAP OAuth brand (consent screen). Only one brand per project is allowed.
-resource "google_iap_brand" "brand" {
-  support_email     = "support@${module.common.organization_domain}"
-  application_title = module.common.project_base_name
-  project           = var.gcp_project_id
-}
-
-# IAP OAuth client used by the ALB backend service.
-resource "google_iap_client" "iap_client" {
-  display_name = "${module.common.project_base_name} IAP Client"
-  brand        = google_iap_brand.brand.name
-}
-
 # %% External Application Load Balancer %%
 
 resource "google_compute_global_address" "alb_ip" {
@@ -243,9 +230,7 @@ resource "google_compute_backend_service" "frontend_backend" {
   }
 
   iap {
-    enabled              = true
-    oauth2_client_id     = google_iap_client.iap_client.client_id
-    oauth2_client_secret = google_iap_client.iap_client.secret
+    enabled = true
   }
 }
 
