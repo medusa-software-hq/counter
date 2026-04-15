@@ -129,7 +129,7 @@ resource "google_cloud_run_v2_service" "frontend" {
   name                = "${module.common.project_base_name}-frontend"
   location            = module.common.gcp_primary_location
   deletion_protection = false # This project is experimental
-  ingress             = "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCING"
+  ingress             = "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER"
 
   template {
     service_account       = google_service_account.frontend_sa.email

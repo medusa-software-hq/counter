@@ -79,6 +79,16 @@ provider "google" {
   region  = module.common.gcp_primary_location
 }
 
+# Separate provider alias with user_project_override for orgpolicy.googleapis.com,
+# which requires a quota project when using ADC (user credentials).
+provider "google" {
+  alias                 = "orgpolicy"
+  project               = local.gcp_project_id
+  region                = module.common.gcp_primary_location
+  user_project_override = true
+  billing_project       = local.gcp_project_id
+}
+
 # Enable required GCP APIs
 resource "google_project_service" "apis" {
   for_each = toset([
@@ -163,16 +173,11 @@ resource "google_project_iam_member" "ci_cd_sa_iap_admin" {
   member  = "serviceAccount:${google_service_account.ci_cd_sa.email}"
 }
 
-# Grant GitHub Actions SA org policy admin (set project-level org policy overrides)
-resource "google_project_iam_member" "ci_cd_sa_orgpolicy_admin" {
-  project = local.gcp_project_id
-  role    = "roles/orgpolicy.policyAdmin"
-  member  = "serviceAccount:${google_service_account.ci_cd_sa.email}"
-}
-
 # Override the org-level iam.allowedPolicyMemberDomains constraint at the project level
 # to allow allUsers on the public assets bucket (CSS, images).
 resource "google_org_policy_policy" "allow_all_iam_members" {
+  provider = google.orgpolicy
+
   name   = "projects/${local.gcp_project_id}/policies/iam.allowedPolicyMemberDomains"
   parent = "projects/${local.gcp_project_id}"
 
