@@ -180,6 +180,13 @@ resource "google_project_iam_member" "ci_cd_sa_sa_admin" {
   member  = "serviceAccount:${google_service_account.ci_cd_sa.email}"
 }
 
+# Grant GitHub Actions SA service account user (act as service accounts when deploying Cloud Run)
+resource "google_project_iam_member" "ci_cd_sa_sa_user" {
+  project = local.gcp_project_id
+  role    = "roles/iam.serviceAccountUser"
+  member  = "serviceAccount:${google_service_account.ci_cd_sa.email}"
+}
+
 # Override the org-level iam.allowedPolicyMemberDomains constraint at the project level
 # to allow allUsers on the public assets bucket (CSS, images).
 resource "google_org_policy_policy" "allow_all_iam_members" {
