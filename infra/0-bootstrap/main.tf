@@ -166,10 +166,17 @@ resource "google_project_iam_member" "ci_cd_sa_run_admin" {
   member  = "serviceAccount:${google_service_account.ci_cd_sa.email}"
 }
 
-# Grant GitHub Actions SA IAP admin (manage IAP brands, clients, policies)
+# Grant GitHub Actions SA IAP admin (manage IAP access policies)
 resource "google_project_iam_member" "ci_cd_sa_iap_admin" {
   project = local.gcp_project_id
   role    = "roles/iap.admin"
+  member  = "serviceAccount:${google_service_account.ci_cd_sa.email}"
+}
+
+# Grant GitHub Actions SA service account admin (create/manage Cloud Run SAs)
+resource "google_project_iam_member" "ci_cd_sa_sa_admin" {
+  project = local.gcp_project_id
+  role    = "roles/iam.serviceAccountAdmin"
   member  = "serviceAccount:${google_service_account.ci_cd_sa.email}"
 }
 
