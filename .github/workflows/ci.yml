@@ -23,4 +23,8 @@ jobs:
           go install github.com/reugn/github-ci/cmd/github-ci@latest
           echo "$HOME/go/bin" >> "$GITHUB_PATH"
 
+      - uses: hashicorp/setup-terraform@v4.0.0
+        with:
+          terraform_version: "~> 1.14"
+
       - uses: pre-commit/action@v3.0.1

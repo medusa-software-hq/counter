@@ -7,3 +7,10 @@ repos:
         entry: github-ci lint
         files: ^\.github/.*\.yml$
         pass_filenames: false
+
+      - id: terraform-fmt
+        name: terraform fmt
+        language: system
+        entry: terraform fmt -check -recursive
+        files: ^infra/.*\.tf$
+        pass_filenames: false
