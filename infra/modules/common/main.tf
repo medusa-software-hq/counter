@@ -1,3 +1,7 @@
+terraform {
+  required_version = ">= 1.14"
+}
+
 locals {
   gh_organization_name = "medusa-software-hq"
   gh_app_repo_name     = "counter"
