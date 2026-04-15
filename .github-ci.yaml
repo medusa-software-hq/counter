@@ -1,0 +1,7 @@
+linters:
+  default: all
+  disable:
+    - versions
+upgrade:
+  actions: {}
+  format: tag

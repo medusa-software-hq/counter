@@ -1,0 +1,9 @@
+repos:
+  - repo: local
+    hooks:
+      - id: github-ci-lint
+        name: github-ci lint
+        language: system
+        entry: github-ci lint
+        files: ^\.github/.*\.yml$
+        pass_filenames: false

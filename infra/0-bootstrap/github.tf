@@ -59,6 +59,14 @@ resource "github_repository_ruleset" "default_branch" {
     pull_request {
       allowed_merge_methods = ["merge"]
     }
+
+    required_status_checks {
+      required_check {
+        context = "pre-commit"
+      }
+
+      strict_required_status_checks_policy = true
+    }
   }
 }
 
