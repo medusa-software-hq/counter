@@ -110,3 +110,15 @@ resource "github_actions_variable" "gcp_ci_cd_sa_email" {
   variable_name = "GCP_CI_CD_SA_EMAIL"
   value         = google_service_account.ci_cd_sa.email
 }
+
+resource "github_actions_variable" "gcp_ar_repo_hostname" {
+  repository    = github_repository.this.name
+  variable_name = "GCP_AR_REPO_HOSTNAME"
+  value         = split("/", google_artifact_registry_repository.registry.registry_uri)[0]
+}
+
+resource "github_actions_variable" "gcp_ar_repo_endpoint" {
+  repository    = github_repository.this.name
+  variable_name = "GCP_AR_REPO_ENDPOINT"
+  value         = local.gcp_ar_repo_endpoint
+}

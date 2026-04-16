@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package medusa.counter.v1;
+
+option java_multiple_files = true;
+option java_package = "software.medusa.counter.v1";
+
+service CounterService {
+  rpc GetCounter(GetCounterRequest) returns (GetCounterResponse);
+  rpc IncrementCounter(IncrementCounterRequest) returns (IncrementCounterResponse);
+}
+
+message GetCounterRequest {}
+
+message GetCounterResponse {
+  int32 count = 1;
+}
+
+message IncrementCounterRequest {}
+
+message IncrementCounterResponse {
+  int32 count = 1;
+}

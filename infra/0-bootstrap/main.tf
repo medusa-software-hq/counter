@@ -108,6 +108,21 @@ resource "google_project_service" "apis" {
   disable_on_destroy = false
 }
 
+# %% Artifact Registry %%
+
+resource "google_artifact_registry_repository" "registry" {
+  project       = google_project.gcp_project.project_id
+  location      = module.common.gcp_primary_location
+  repository_id = module.common.project_base_name
+  format        = "DOCKER"
+  description   = "Docker images for the ${module.common.project_base_name} project."
+}
+
+locals {
+  # `registry_uri` means repository endpoint, for example: us-docker.pkg.dev/my-proj/my-repo (not a URI at all)
+  gcp_ar_repo_endpoint = google_artifact_registry_repository.registry.registry_uri
+}
+
 # %% GitHub Actions service account %%
 
 resource "google_service_account" "ci_cd_sa" {
@@ -187,6 +202,15 @@ resource "google_project_iam_member" "ci_cd_sa_sa_user" {
   member  = "serviceAccount:${google_service_account.ci_cd_sa.email}"
 }
 
+# Allow the CI SA to push images to Artifact Registry.
+resource "google_artifact_registry_repository_iam_member" "registry_ci_writer" {
+  project    = google_project.gcp_project.project_id
+  location   = module.common.gcp_primary_location
+  repository = google_artifact_registry_repository.registry.repository_id
+  role       = "roles/artifactregistry.writer"
+  member     = "serviceAccount:${google_service_account.ci_cd_sa.email}"
+}
+
 # Override the org-level iam.allowedPolicyMemberDomains constraint at the project level
 # to allow allUsers on the public assets bucket (CSS, images).
 resource "google_org_policy_policy" "allow_all_iam_members" {
@@ -205,6 +229,11 @@ resource "google_org_policy_policy" "allow_all_iam_members" {
 }
 
 # %% Outputs %%
+
+output "gcp_ar_repo_endpoint" {
+  description = "Artifact Registry repository endpoint"
+  value       = local.gcp_ar_repo_endpoint
+}
 
 output "gcp_project_id" {
   description = "GCP project ID."

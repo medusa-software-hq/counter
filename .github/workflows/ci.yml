@@ -15,6 +15,9 @@ env:
   TF_CLI_ARGS: -no-color
   NO_COLOR: 1
 
+  COUNTER_SERVICE_IMAGE_REF: ${{ vars.GCP_AR_REPO_ENDPOINT }}/counter-service
+  IMAGE_TAG: ${{ github.sha }}
+
   TF_VAR_gcp_project_id: ${{ vars.GCP_PROJECT_ID }}
   TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
   TF_VAR_cloudflare_zone_id: ${{ vars.CLOUDFLARE_ZONE_ID }}
@@ -26,6 +29,7 @@ jobs:
   pre-commit:
     name: pre-commit
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v6.0.2
 
@@ -43,14 +47,6 @@ jobs:
         with:
           python-version: "3.x"
 
-      - uses: actions/setup-java@v5.2.0
-        with:
-          distribution: ${{ env.JAVA_DISTRIBUTION }}
-          java-version: ${{ env.JAVA_VERSION }}
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v6.1.0
-
       - name: Install github-ci
         run: |
           go install github.com/reugn/github-ci/cmd/github-ci@latest
@@ -63,51 +59,6 @@ jobs:
       - uses: terraform-linters/setup-tflint@v6.2.2
 
       - uses: pre-commit/action@v3.0.1
-
-  build-counter-web:
-    name: Build (counter-web)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6.0.2
-
-      - uses: actions/setup-node@v6.3.0
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-          cache-dependency-path: apps/counter-web/package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-        working-directory: apps/counter-web
-
-      - name: Build
-        run: npm run build
-        working-directory: apps/counter-web
-
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v7.0.1
-        with:
-          name: counter-web-dist
-          path: apps/counter-web/dist/
-
-  build-counter-service:
-    name: Build (counter-service)
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v6.0.2
-
-      - uses: actions/setup-java@v5.2.0
-        with:
-          distribution: ${{ env.JAVA_DISTRIBUTION }}
-          java-version: ${{ env.JAVA_VERSION }}
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v6.1.0
-
-      - name: Build & test
-        run: ./gradlew build
-        working-directory: services/counter-service
 
   foundation-plan:
     name: Terraform Plan (foundation)
@@ -131,16 +82,10 @@ jobs:
         with:
           terraform_version: ~> ${{ env.TERRAFORM_VERSION }}
 
-      - name: Terraform Init
-        run: terraform init
-        working-directory: infra/1-foundation
-
-      - name: Terraform Plan
-        run: terraform plan | tee terraform-plan.txt
-        working-directory: infra/1-foundation
-
-      - name: Publish plan to step summary
+      - name: Terraform Plan (Foundation)
         run: |
+          terraform init
+          terraform plan | tee terraform-plan.txt
           {
             echo '## Terraform plan (foundation)'
             echo ''
@@ -160,8 +105,9 @@ jobs:
       id-token: write
 
     outputs:
-      assets_bucket_name: ${{ steps.outputs.outputs.assets_bucket_name }}
-      root_bucket_name: ${{ steps.outputs.outputs.root_bucket_name }}
+      counter_service_name: ${{ steps.terraform.outputs.counter_service_name }}
+      assets_bucket_name: ${{ steps.terraform.outputs.assets_bucket_name }}
+      root_bucket_name: ${{ steps.terraform.outputs.root_bucket_name }}
 
     steps:
       - uses: actions/checkout@v6.0.2
@@ -175,30 +121,120 @@ jobs:
         with:
           terraform_version: ~> ${{ env.TERRAFORM_VERSION }}
 
-      - name: Terraform Init
-        run: terraform init
-        working-directory: infra/1-foundation
-
-      - name: Terraform Apply
-        run: terraform apply -auto-approve
-        working-directory: infra/1-foundation
-
-      - name: Capture outputs
-        id: outputs
+      - name: Terraform Apply (Foundation)
+        id: terraform
         run: |
+          terraform init
+          terraform apply -auto-approve
+          echo "counter_service_name=$(terraform output -raw counter_service_name)" >> "$GITHUB_OUTPUT"
           echo "assets_bucket_name=$(terraform output -raw assets_bucket_name)" >> "$GITHUB_OUTPUT"
           echo "root_bucket_name=$(terraform output -raw root_bucket_name)" >> "$GITHUB_OUTPUT"
         working-directory: infra/1-foundation
 
-  deploy-counter-web:
-    name: Deploy (counter-web)
-    needs: [build-counter-web, foundation-apply]
+  build-counter-service:
+    name: Build (counter-service)
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v6.0.2
+
+      - uses: google-github-actions/auth@v3.0.0
+        with:
+          workload_identity_provider: ${{ vars.GCP_GH_ACTIONS_WORKLOAD_IDENTITY_PROVIDER_NAME }}
+          service_account: ${{ vars.GCP_CI_CD_SA_EMAIL }}
+
+      - uses: actions/setup-java@v5.2.0
+        with:
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4.4.1
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ vars.GCP_AR_REPO_HOSTNAME }} --quiet
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+      - name: Build and push image
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: >
+          ./gradlew :server:jib
+          -Pjib.imageRef=${{ vars.COUNTER_SERVICE_IMAGE_REF }}
+          -Pjib.imageTag=${{ vars.IMAGE_TAG }}
+        working-directory: services/counter-service
+
+      - name: Build image tarball
+        if: github.event_name == 'pull_request'
+        run: ./gradlew :server:jibBuildTar
+        working-directory: services/counter-service
+
+  build-counter-web:
+    name: Build (counter-web)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6.0.2
+
+      - uses: actions/setup-node@v6.3.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: apps/counter-web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: apps/counter-web
+
+      - name: Build
+        run: npm run build
+        working-directory: apps/counter-web
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: counter-web-dist
+          path: apps/counter-web/dist/
+
+  deploy-counter-service:
+    name: Deploy (counter-service)
+    needs: [foundation-apply, build-counter-service]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
 
     env:
-      ASSETS_BUCKET: ${{ needs.foundation-apply.outputs.assets_bucket_name }}
-      ROOT_BUCKET: ${{ needs.foundation-apply.outputs.root_bucket_name }}
+      COUNTER_SERVICE_NAME: ${{ needs.foundation-apply.terraform.counter_service_name }}
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: google-github-actions/auth@v3.0.0
+        with:
+          workload_identity_provider: ${{ vars.GCP_GH_ACTIONS_WORKLOAD_IDENTITY_PROVIDER_NAME }}
+          service_account: ${{ vars.GCP_CI_CD_SA_EMAIL }}
+
+      - name: Deploy to Cloud Run
+        run: >
+          gcloud run deploy ${{ vars.COUNTER_SERVICE_NAME }}
+          --project=${{ vars.GCP_PROJECT_ID }}
+          --region=${{ vars.GCP_PRIMARY_REGION }}
+          --image=${{ vars.COUNTER_SERVICE_IMAGE_REF }}:${{ vars.IAMGE_TAG }}
+          --quiet
+
+  deploy-counter-web:
+    name: Deploy (counter-web)
+    needs: [foundation-apply, build-counter-web]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    env:
+      ASSETS_BUCKET_NAME: ${{ needs.foundation-apply.terraform.assets_bucket_name }}
+      ROOT_BUCKET_NAME: ${{ needs.foundation-apply.terraform.root_bucket_name }}
 
     permissions:
       contents: read
@@ -216,8 +252,8 @@ jobs:
           name: counter-web-dist
           path: dist/
 
-      - name: Upload assets to assets bucket (public CDN)
-        run: gcloud storage rsync -r dist/assets/ gs://${{ env.ASSETS_BUCKET }}/assets/
+      - name: Upload dist files from assets/ to assets bucket
+        run: gcloud storage rsync -r dist/assets/ gs://${{ env.ASSETS_BUCKET_NAME }}/assets/
 
-      - name: Upload JS and HTML to root bucket (IAP)
-        run: gcloud storage rsync -r --exclude="^assets/" dist/ gs://${{ env.ROOT_BUCKET }}/
+      - name: Upload other dist files to root bucket
+        run: gcloud storage rsync -r --exclude="^assets/" dist/ gs://${{ env.ROOT_BUCKET_NAME }}/
