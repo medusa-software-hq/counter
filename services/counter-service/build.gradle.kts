@@ -1,8 +1,10 @@
 plugins {
+    alias(libs.plugins.jib) apply false
     alias(libs.plugins.kotlin.jvm) apply false
     alias(libs.plugins.versionCatalogUpdate)
     alias(libs.plugins.ktfmt) apply false
     alias(libs.plugins.detekt) apply false
+    alias(libs.plugins.protobuf) apply false
 }
 
 allprojects {

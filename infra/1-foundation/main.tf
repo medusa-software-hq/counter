@@ -77,7 +77,51 @@ locals {
   ttl_auto = 1        # means "automatic" in Cloudflare
 
   # Cloud Run serverless robot SA — invokes Cloud Run on behalf of the ALB NEG
+  # https://docs.cloud.google.com/iam/docs/service-agents#google-cloud-run-service-agent
   cloud_run_robot_sa = "serviceAccount:service-${data.google_project.project.number}@serverless-robot-prod.iam.gserviceaccount.com"
+}
+
+# %% Cloud Run: Counter Service (gRPC backend) %%
+
+locals {
+  counter_service_name = "counter-service"
+}
+
+# Dedicated service account for the Counter Service.
+resource "google_service_account" "counter_service_sa" {
+  project      = var.gcp_project_id
+  account_id   = local.counter_service_name
+  display_name = "Counter Service Cloud Run Service Account"
+}
+
+resource "google_cloud_run_v2_service" "counter_service" {
+  name                = local.counter_service_name
+  location            = module.common.gcp_primary_location
+  deletion_protection = false # This project is experimental
+  ingress             = "INGRESS_TRAFFIC_ALL"
+
+  template {
+    service_account = google_service_account.counter_service_sa.email
+
+    containers {
+      image = "us-docker.pkg.dev/cloudrun/container/hello"
+
+      env {
+        name  = "PORT"
+        value = 8080
+      }
+    }
+  }
+
+  traffic {
+    type    = "TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST"
+    percent = 100
+  }
+
+  # noinspection HILUnresolvedReference
+  lifecycle {
+    ignore_changes = [template[0].containers[0].image]
+  }
 }
 
 # %% Frontend Cloud Storage buckets %%
@@ -149,7 +193,7 @@ resource "google_cloud_run_v2_service" "frontend" {
       image = "nginx:alpine"
 
       ports {
-        container_port = 80
+        container_port = 80 # Nginx default
       }
 
       volume_mounts {
@@ -332,6 +376,16 @@ resource "cloudflare_dns_record" "app_dns" {
 }
 
 # %% Outputs %%
+
+output "counter_service_name" {
+  description = "Name of the Counter Service."
+  value       = google_cloud_run_v2_service.counter_service.name
+}
+
+output "counter_service_url" {
+  description = "Cloud Run URL of the Counter Service."
+  value       = google_cloud_run_v2_service.counter_service.uri
+}
 
 output "assets_bucket_name" {
   description = "Name of the Cloud Storage bucket holding public CSS and image assets."
