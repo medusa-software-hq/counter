@@ -81,6 +81,11 @@ resource "github_repository_ruleset" "default_branch" {
         integration_id = local.gh_actions_integration_id
       }
 
+      required_check {
+        context        = "Build (counter-service)"
+        integration_id = local.gh_actions_integration_id
+      }
+
       strict_required_status_checks_policy = true
     }
   }
