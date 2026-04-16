@@ -163,8 +163,8 @@ jobs:
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: >
           ./gradlew :server:jib
-          -Pjib.imageRef=${{ vars.COUNTER_SERVICE_IMAGE_REF }}
-          -Pjib.imageTag=${{ vars.IMAGE_TAG }}
+          -Pjib.imageRef=${{ env.COUNTER_SERVICE_IMAGE_REF }}
+          -Pjib.imageTag=${{ env.IMAGE_TAG }}
         working-directory: services/counter-service
 
       - name: Build image tarball
@@ -223,7 +223,7 @@ jobs:
           gcloud run deploy ${{ vars.COUNTER_SERVICE_NAME }}
           --project=${{ vars.GCP_PROJECT_ID }}
           --region=${{ vars.GCP_PRIMARY_REGION }}
-          --image=${{ vars.COUNTER_SERVICE_IMAGE_REF }}:${{ vars.IAMGE_TAG }}
+          --image=${{ env.COUNTER_SERVICE_IMAGE_REF }}:${{ env.IMAGE_TAG }}
           --quiet
 
   deploy-counter-web:
