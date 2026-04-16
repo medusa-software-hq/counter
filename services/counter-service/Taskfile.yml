@@ -27,3 +27,10 @@ tasks:
     cmds:
       - ./gradlew detekt
     interactive: true
+
+  compile:
+    desc: Compile the Kotlin sources
+    sources: *kotlinSources
+    cmds:
+      - ./gradlew compileKotlin
+    interactive: true
