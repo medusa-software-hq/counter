@@ -1,0 +1,43 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
+version: '3'
+
+includes:
+  infra:
+    taskfile: infra/Taskfile.yml
+    dir: infra
+
+  counter-service:
+    taskfile: services/counter-service/Taskfile.yml
+    dir: services/counter-service
+
+  counter-web:
+    taskfile: apps/counter-web/Taskfile.yml
+    dir: apps/counter-web
+
+tasks:
+  lint-workflows:
+    desc: Lint GitHub workflows
+    sources:
+      - '.github/workflows/*.yml'
+    cmds:
+      - github-ci lint
+
+  fixLint-workflows:
+    desc: Fix lint issues in GitHub workflows
+    sources:
+      - '.github/workflows/*.yml'
+    cmds:
+      - github-ci lint --fix
+
+  checkFormatting-all:
+    desc: Check formatting for the entire codebase
+    deps: [ lint-workflows, infra:checkFormatting, counter-web:checkFormatting, counter-service:checkFormatting ]
+
+  fixFormatting-all:
+    desc: Fix formatting for the entire codebase
+    deps: [ fixLint-workflows, infra:fixFormatting, counter-web:fixFormatting, counter-service:fixFormatting ]
+
+  lint-all:
+    desc: Lint the entire codebase
+    deps: [ lint-workflows, infra:lint, counter-web:lint, counter-service:lint ]

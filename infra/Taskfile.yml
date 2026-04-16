@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
+version: '3'
+
+tasks:
+  checkFormatting:
+    desc: Check Terraform formatting
+    sources:
+      - '**/*.tf'
+    cmds:
+      - terraform fmt -check -recursive
+
+  fixFormatting:
+    desc: Fix Terraform formatting
+    sources:
+      - '**/*.tf'
+    cmds:
+      - terraform fmt -recursive
+
+  lint:
+    desc: Lint the Terraform sources
+    sources:
+      - '**/*.tf'
+    cmds:
+      - tflint --recursive
