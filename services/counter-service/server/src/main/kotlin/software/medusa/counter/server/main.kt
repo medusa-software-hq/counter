@@ -1,5 +1,5 @@
 package software.medusa.counter.server
 
 fun main() {
-  println(CounterServerUtils.sayHello())
+  println(CounterServerUtils.sayHello("Counter Service"))
 }

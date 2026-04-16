@@ -1,5 +1,5 @@
 package software.medusa.counter.server
 
 data object CounterServerUtils {
-  fun sayHello(): String = "Hello, from Counter Service!"
+  fun sayHello(name: String): String = "Hello, from $name!"
 }

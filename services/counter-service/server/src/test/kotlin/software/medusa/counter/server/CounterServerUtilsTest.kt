@@ -7,7 +7,7 @@ class CounterServerUtilsTest {
   @Test
   fun testSayHello() {
     assertContains(
-        CounterServerUtils.sayHello(),
+        CounterServerUtils.sayHello("Test"),
         "Hello",
     )
   }
