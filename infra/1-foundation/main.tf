@@ -381,6 +381,11 @@ output "counter_service_name" {
   value       = google_cloud_run_v2_service.counter_service.name
 }
 
+output "counter_service_location" {
+  description = "Location of the Counter Service."
+  value       = google_cloud_run_v2_service.counter_service.location
+}
+
 output "counter_service_url" {
   description = "Cloud Run URL of the Counter Service."
   value       = google_cloud_run_v2_service.counter_service.uri
