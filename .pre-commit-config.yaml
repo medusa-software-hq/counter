@@ -42,3 +42,10 @@ repos:
         entry: bash -c 'cd services/counter-service && ./gradlew ktfmtCheck'
         files: ^services/counter-service/.*\.kt$
         pass_filenames: false
+
+      - id: detekt-counter-service
+        name: detekt (counter-service)
+        language: system
+        entry: bash -c 'cd services/counter-service && ./gradlew detekt'
+        files: ^services/counter-service/.*\.kt$
+        pass_filenames: false

@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.kotlin.jvm) apply false
     alias(libs.plugins.versionCatalogUpdate)
     alias(libs.plugins.ktfmt) apply false
+    alias(libs.plugins.detekt) apply false
 }
 
 allprojects {
@@ -13,6 +14,7 @@ allprojects {
 subprojects {
     pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {
         apply(plugin = "com.ncorti.ktfmt.gradle")
+        apply(plugin = "io.gitlab.arturbosch.detekt")
 
         tasks.named("check") {
             dependsOn(tasks.named("ktfmtCheck"))
