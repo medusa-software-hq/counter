@@ -206,7 +206,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      COUNTER_SERVICE_NAME: ${{ needs.foundation-apply.terraform.counter_service_name }}
+      COUNTER_SERVICE_NAME: ${{ needs.foundation-apply.outputs.counter_service_name }}
 
     permissions:
       contents: read
@@ -233,8 +233,8 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      ASSETS_BUCKET_NAME: ${{ needs.foundation-apply.terraform.assets_bucket_name }}
-      ROOT_BUCKET_NAME: ${{ needs.foundation-apply.terraform.root_bucket_name }}
+      ASSETS_BUCKET_NAME: ${{ needs.foundation-apply.outputs.assets_bucket_name }}
+      ROOT_BUCKET_NAME: ${{ needs.foundation-apply.outputs.root_bucket_name }}
 
     permissions:
       contents: read
