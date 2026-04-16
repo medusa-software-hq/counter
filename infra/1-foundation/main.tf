@@ -123,6 +123,15 @@ resource "google_cloud_run_v2_service" "counter_service" {
   }
 }
 
+# Allow unauthenticated invocations of the Counter Service.
+resource "google_cloud_run_v2_service_iam_member" "counter_service_invoker_all_users" {
+  project  = var.gcp_project_id
+  location = module.common.gcp_primary_location
+  name     = google_cloud_run_v2_service.counter_service.name
+  role     = "roles/run.invoker"
+  member   = "allUsers"
+}
+
 # %% Frontend Cloud Storage buckets %%
 
 resource "random_id" "assets_bucket_random_id" {
