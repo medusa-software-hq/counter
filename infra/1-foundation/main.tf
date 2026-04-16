@@ -104,12 +104,11 @@ resource "google_cloud_run_v2_service" "counter_service" {
     service_account = google_service_account.counter_service_sa.email
 
     containers {
-      image = "us-docker.pkg.dev/cloudrun/container/hello"
-
-      env {
-        name  = "PORT"
-        value = 8080
+      ports {
+        container_port = 8080
       }
+
+      image = "us-docker.pkg.dev/cloudrun/container/hello"
     }
   }
 
