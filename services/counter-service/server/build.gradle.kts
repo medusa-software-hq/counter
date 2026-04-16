@@ -1,15 +1,13 @@
 plugins {
-    alias(libs.plugins.kotlin.jvm)
+  alias(libs.plugins.kotlin.jvm)
 
-    application
+  application
 }
 
 dependencies {
-    runtimeOnly(libs.logback.classic)
+  runtimeOnly(libs.logback.classic)
 
-    testImplementation(libs.kotlin.test)
+  testImplementation(libs.kotlin.test)
 }
 
-application {
-    mainClass = "software.medusa.counter.server.MainKt"
-}
+application { mainClass = "software.medusa.counter.server.MainKt" }

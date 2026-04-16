@@ -35,3 +35,10 @@ repos:
         entry: tflint --recursive
         files: ^infra/.*\.tf$
         pass_filenames: false
+
+      - id: ktfmt-counter-service
+        name: ktfmt (counter-service)
+        language: system
+        entry: bash -c 'cd services/counter-service && ./gradlew ktfmtCheck'
+        files: ^services/counter-service/.*\.kt$
+        pass_filenames: false
