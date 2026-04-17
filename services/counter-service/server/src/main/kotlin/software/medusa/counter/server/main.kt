@@ -7,16 +7,19 @@ import com.linecorp.armeria.server.grpc.GrpcService
 import com.linecorp.armeria.server.healthcheck.HealthCheckService
 
 private const val portEnvVarName = "PORT"
-
-private const val originRegex = """https://[a-z0-9-]+\.medusa\.software"""
+private const val allowedOriginEnvVarName = "CORS_ALLOWED_ORIGIN"
 
 fun main() {
   val port =
       System.getenv(portEnvVarName)?.toIntOrNull()
           ?: error("$portEnvVarName environment variable must be set to a valid integer")
 
+  val allowedOrigin =
+      System.getenv(allowedOriginEnvVarName)
+          ?: error("$allowedOriginEnvVarName environment variable must be set")
+
   val cors =
-      CorsService.builderForOriginRegex(originRegex)
+      CorsService.builderForOriginRegex(allowedOrigin)
           .apply {
             allowRequestMethods(
                 HttpMethod.POST,

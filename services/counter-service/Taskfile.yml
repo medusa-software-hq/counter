@@ -34,3 +34,12 @@ tasks:
     cmds:
       - ./gradlew compileKotlin
     interactive: true
+
+  run:
+    desc: Run the service
+    env:
+      PORT: 8080
+      CORS_ALLOWED_ORIGIN: 'http://localhost:\d+'
+    cmds:
+      - ./gradlew run
+    interactive: true

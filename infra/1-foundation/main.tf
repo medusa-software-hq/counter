@@ -108,6 +108,11 @@ resource "google_cloud_run_v2_service" "counter_service" {
         container_port = 8080
       }
 
+      env {
+        name  = "CORS_ALLOWED_ORIGIN"
+        value = "https://[a-z0-9-]+\\.medusa\\.software"
+      }
+
       image = "us-docker.pkg.dev/cloudrun/container/hello"
     }
   }
@@ -185,6 +190,50 @@ resource "google_storage_bucket_iam_member" "root_bucket_run_reader" {
   member = "serviceAccount:${google_service_account.frontend_sa.email}"
 }
 
+# nginx config bucket — holds default.conf, managed by Terraform.
+# Terraform interpolates the counter-service URL at apply time so the SPA
+# receives it as a <meta> tag injected by nginx sub_filter.
+resource "random_id" "nginx_config_bucket_random_id" {
+  byte_length = 4
+}
+
+resource "google_storage_bucket" "nginx_config_bucket" {
+  project                     = var.gcp_project_id
+  name                        = "${module.common.project_base_name}-nginx-config-${random_id.nginx_config_bucket_random_id.hex}"
+  location                    = module.common.gcp_primary_location
+  uniform_bucket_level_access = true
+  force_destroy               = true
+}
+
+resource "google_storage_bucket_iam_member" "nginx_config_bucket_run_reader" {
+  bucket = google_storage_bucket.nginx_config_bucket.name
+  role   = "roles/storage.objectViewer"
+  member = "serviceAccount:${google_service_account.frontend_sa.email}"
+}
+
+resource "google_storage_bucket_object" "nginx_config" {
+  name   = "default.conf"
+  bucket = google_storage_bucket.nginx_config_bucket.name
+
+  content = <<-EOT
+    server {
+      listen 80;
+
+      # Inject the counter-service URL into index.html as a <meta> tag.
+      # The placeholder <meta name="counter-service-url" content=""> is replaced at
+      # request time — no rebuild or custom Docker image required.
+      sub_filter '<meta name="counter-service-url" content="">'
+                 '<meta name="counter-service-url" content="${google_cloud_run_v2_service.counter_service.uri}">';
+      sub_filter_once on;
+
+      location / {
+        root /usr/share/nginx/html;
+        try_files $uri $uri/ /index.html;
+      }
+    }
+  EOT
+}
+
 # nginx serves the mounted root bucket (index.html + JS bundles) behind IAP.
 # Gen2 execution environment is required for GCS volume mounts.
 resource "google_cloud_run_v2_service" "frontend" {
@@ -208,12 +257,25 @@ resource "google_cloud_run_v2_service" "frontend" {
         name       = "root-bucket"
         mount_path = "/usr/share/nginx/html"
       }
+
+      volume_mounts {
+        name       = "nginx-config"
+        mount_path = "/etc/nginx/conf.d"
+      }
     }
 
     volumes {
       name = "root-bucket"
       gcs {
         bucket    = google_storage_bucket.root_bucket.name
+        read_only = true
+      }
+    }
+
+    volumes {
+      name = "nginx-config"
+      gcs {
+        bucket    = google_storage_bucket.nginx_config_bucket.name
         read_only = true
       }
     }

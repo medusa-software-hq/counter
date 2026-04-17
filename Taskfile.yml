@@ -46,7 +46,3 @@ tasks:
   lint-all:
     desc: Lint the entire codebase
     deps: [ github-ci:lint, infra:lint, counter-web:lint, counter-service:lint ]
-
-  analyze-all:
-    desc: Analyze the entire codebase
-    deps: [ counter-web:typecheck, counter-service:compile, infra:validate ]

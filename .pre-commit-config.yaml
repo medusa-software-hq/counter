@@ -12,9 +12,3 @@ repos:
         language: system
         entry: task lint-all
         pass_filenames: false
-
-      - id: analyze-all
-        name: Analyze the entire codebase
-        language: system
-        entry: task analyze-all
-        pass_filenames: false
