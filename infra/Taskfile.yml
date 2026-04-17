@@ -2,24 +2,30 @@
 
 version: '3'
 
+.terraformSources: &terraformSources
+  - '**/*.tf'
+
 tasks:
   checkFormatting:
     desc: Check Terraform formatting
-    sources:
-      - '**/*.tf'
+    sources: *terraformSources
     cmds:
       - terraform fmt -check -recursive
 
   fixFormatting:
     desc: Fix Terraform formatting
-    sources:
-      - '**/*.tf'
+    sources: *terraformSources
     cmds:
       - terraform fmt -recursive
 
   lint:
     desc: Lint the Terraform sources
-    sources:
-      - '**/*.tf'
+    sources: *terraformSources
     cmds:
       - tflint --recursive
+
+  validate:
+    desc: Validate the Terraform configuration
+    sources: *terraformSources
+    cmds:
+      - terraform validate

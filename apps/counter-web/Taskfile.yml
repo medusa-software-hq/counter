@@ -31,11 +31,16 @@ tasks:
     cmds:
       - npx eslint .
 
-  build:
-    desc: Build the package
+  typecheck:
+    desc: Type check the package
     deps: [install]
     cmds:
-      - npx tsc
+      - npx tsc --noEmit
+
+  build:
+    desc: Build the package
+    deps: [install, typecheck]
+    cmds:
       - npx vite build
 
   dev:
