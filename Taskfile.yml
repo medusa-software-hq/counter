@@ -1,5 +1,10 @@
 version: '3'
 
+includes:
+  counter-web:
+    taskfile: apps/counter-web/frontend/Taskfile.yml
+    dir: apps/counter-web/frontend
+
 tasks:
   github-ci:lint:
     desc: Lint GitHub workflows
@@ -19,3 +24,19 @@ tasks:
     desc: Upgrade GitHub workflow actions to the latest versions
     cmds:
       - github-ci upgrade
+
+  checkFormatting-all:
+    desc: Check formatting for the entire codebase
+    deps: [ github-ci:lint, counter-web:checkFormatting ]
+
+  fixFormatting-all:
+    desc: Fix formatting for the entire codebase
+    deps: [ github-ci:fixLint, counter-web:fixFormatting ]
+
+  lint-all:
+    desc: Lint the entire codebase
+    deps: [ github-ci:lint, counter-web:lint ]
+
+  analyze-all:
+    desc: Analyze the entire codebase
+    deps: [ counter-web:typecheck ]
