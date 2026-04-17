@@ -1,0 +1,41 @@
+name: counter-web
+
+on:
+  push:
+    branches: ["trunk/*"]
+    paths: &trigger-paths
+      - "apps/counter-web/**"
+
+  pull_request:
+    paths: *trigger-paths
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: 24
+  NO_COLOR: 1
+
+jobs:
+  build:
+    name: Build (counter-web/frontend)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6.0.2
+
+      - uses: actions/setup-node@v6.3.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: apps/counter-web/frontend/package-lock.json
+
+      - uses: go-task/setup-task@v2
+
+      - name: Check formatting and lint
+        run: task checkFormatting lint
+        working-directory: apps/counter-web/frontend
+
+      - name: Build frontend
+        run: task build
+        working-directory: apps/counter-web/frontend
