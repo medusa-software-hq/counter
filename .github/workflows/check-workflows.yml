@@ -1,0 +1,32 @@
+name: Check GitHub workflows
+
+on:
+  push:
+    branches: ["trunk/*"]
+    paths: &trigger-paths
+      - ".github/workflows/**"
+
+  pull_request:
+    paths: *trigger-paths
+
+permissions:
+  contents: read
+
+env:
+  NO_COLOR: 1
+
+jobs:
+  lint:
+    name: Lint GitHub workflows
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6.0.2
+
+      - name: Install github-ci
+        run: |
+          go install github.com/reugn/github-ci/cmd/github-ci@latest
+          echo "$HOME/go/bin" >> "$GITHUB_PATH"
+
+      - name: Lint GitHub workflows
+        run: github-ci lint
