@@ -1,51 +1,14 @@
 repos:
   - repo: local
     hooks:
-      - id: eslint-counter-web
-        name: ESLint (counter-web)
+      - id: checkFormatting-all
+        name: Check formatting for the entire codebase
         language: system
-        entry: bash -c 'cd apps/counter-web && npm run lint'
-        files: ^apps/counter-web/.*\.(ts|tsx|js)$
+        entry: task checkFormatting-all
         pass_filenames: false
 
-      - id: prettier-counter-web
-        name: Prettier (counter-web)
+      - id: lint-all
+        name: Lint the entire codebase
         language: system
-        entry: bash -c 'cd apps/counter-web && npm run format:check'
-        files: ^apps/counter-web/.*\.(ts|tsx|js|css|json|html)$
-        pass_filenames: false
-
-      - id: github-ci-lint
-        name: github-ci lint
-        language: system
-        entry: github-ci lint
-        files: ^\.github/.*\.yml$
-        pass_filenames: false
-
-      - id: terraform-fmt
-        name: terraform fmt
-        language: system
-        entry: terraform fmt -check -recursive
-        files: ^infra/.*\.tf$
-        pass_filenames: false
-
-      - id: tflint
-        name: tflint
-        language: system
-        entry: tflint --recursive
-        files: ^infra/.*\.tf$
-        pass_filenames: false
-
-      - id: ktfmt-counter-service
-        name: ktfmt (counter-service)
-        language: system
-        entry: bash -c 'cd services/counter-service && ./gradlew ktfmtCheck'
-        files: ^services/counter-service/.*\.kt$
-        pass_filenames: false
-
-      - id: detekt-counter-service
-        name: detekt (counter-service)
-        language: system
-        entry: bash -c 'cd services/counter-service && ./gradlew detekt'
-        files: ^services/counter-service/.*\.kt$
+        entry: task lint-all
         pass_filenames: false

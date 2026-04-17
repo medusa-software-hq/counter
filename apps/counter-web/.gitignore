@@ -158,3 +158,6 @@ sketch
 
 # Vite dev server cache
 .vite/
+
+# Task cache
+.task/
