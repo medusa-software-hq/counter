@@ -2,57 +2,46 @@
 
 version: '3'
 
+includes:
+  frontend:
+    taskfile: ./frontend/Taskfile.yml
+    dir: ./frontend
+
 tasks:
   install:
-    desc: Install dependencies
-    sources:
-      - package.json
-      - package-lock.json
-    generates:
-      - node_modules/.package-lock.json
+    desc: Install frontend dependencies
     cmds:
-      - npm install
+      - task: frontend:install
 
-  checkFormatting:
-    desc: Check package formatting
-    deps: [install]
+  build:backend:
+    desc: Build the Go backend binary
+    dir: backend
     cmds:
-      - npx prettier --check .
-
-  fixFormatting:
-    desc: Fix package formatting
-    deps: [install]
-    cmds:
-      - npx prettier --write .
-
-  lint:
-    desc: Lint the package
-    deps: [install]
-    cmds:
-      - npx eslint .
-
-  typecheck:
-    desc: Type check the package
-    deps: [install]
-    cmds:
-      - npx tsc --noEmit
+      - go build -o main .
 
   build:
-    desc: Build the package
-    deps: [install, typecheck]
+    desc: Build frontend then backend
     cmds:
-      - npx vite build
+      - task: frontend:build
+      - task: build:backend
 
-  dev:
-    desc: Start dev server
-    deps: [install]
+  # Forwarding tasks expected by the root Taskfile
+  checkFormatting:
+    desc: Check formatting (frontend)
     cmds:
-      - npx vite
-    interactive: true
+      - task: frontend:checkFormatting
 
-  preview:
-    desc: Start preview server
-    deps: [build]
+  fixFormatting:
+    desc: Fix formatting (frontend)
     cmds:
-      - npx vite preview
-    interactive: true
+      - task: frontend:fixFormatting
+
+  lint:
+    desc: Lint the frontend
+    cmds:
+      - task: frontend:lint
+
+  typecheck:
+    desc: Type-check the frontend
+    cmds:
+      - task: frontend:typecheck

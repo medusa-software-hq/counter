@@ -1,0 +1,87 @@
+name: infra
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "infra/**"
+  pull_request:
+    paths:
+      - "infra/**"
+
+env:
+  TERRAFORM_VERSION: 1.14
+
+  TF_INPUT: false
+  TF_CLI_ARGS: -no-color
+  NO_COLOR: 1
+
+  TF_VAR_gcp_project_id: ${{ vars.GCP_PROJECT_ID }}
+  TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+  TF_VAR_cloudflare_zone_id: ${{ vars.CLOUDFLARE_ZONE_ID }}
+
+permissions: read-all
+
+# All required jobs should be marked as such in Terraform `0-bootstrap` config
+jobs:
+  foundation-plan:
+    name: Terraform Plan (foundation)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v6.0.2
+
+      - uses: google-github-actions/auth@v3.0.0
+        with:
+          workload_identity_provider: ${{ vars.GCP_GH_ACTIONS_WORKLOAD_IDENTITY_PROVIDER_NAME }}
+          service_account: ${{ vars.GCP_CI_CD_SA_EMAIL }}
+
+      - uses: hashicorp/setup-terraform@v4.0.0
+        with:
+          terraform_version: ~> ${{ env.TERRAFORM_VERSION }}
+
+      - name: Terraform Plan (Foundation)
+        run: |
+          terraform init
+          terraform plan | tee terraform-plan.txt
+          {
+            echo '## Terraform plan (foundation)'
+            echo ''
+            echo '```'
+            cat terraform-plan.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+        working-directory: infra/1-foundation
+
+  foundation-apply:
+    name: Terraform Apply (foundation)
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v6.0.2
+
+      - uses: google-github-actions/auth@v3.0.0
+        with:
+          workload_identity_provider: ${{ vars.GCP_GH_ACTIONS_WORKLOAD_IDENTITY_PROVIDER_NAME }}
+          service_account: ${{ vars.GCP_CI_CD_SA_EMAIL }}
+
+      - uses: hashicorp/setup-terraform@v4.0.0
+        with:
+          terraform_version: ~> ${{ env.TERRAFORM_VERSION }}
+
+      - name: Terraform Apply (Foundation)
+        run: |
+          terraform init
+          terraform apply -auto-approve
+        working-directory: infra/1-foundation

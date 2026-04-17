@@ -1,0 +1,58 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
+version: '3'
+
+tasks:
+  install:
+    desc: Install dependencies
+    sources:
+      - package.json
+      - package-lock.json
+    generates:
+      - node_modules/.package-lock.json
+    cmds:
+      - npm install
+
+  checkFormatting:
+    desc: Check package formatting
+    deps: [install]
+    cmds:
+      - npx prettier --check .
+
+  fixFormatting:
+    desc: Fix package formatting
+    deps: [install]
+    cmds:
+      - npx prettier --write .
+
+  lint:
+    desc: Lint the package
+    deps: [install]
+    cmds:
+      - npx eslint .
+
+  typecheck:
+    desc: Type check the package
+    deps: [install]
+    cmds:
+      - npx tsc --noEmit
+
+  build:
+    desc: Build the package
+    deps: [install, typecheck]
+    cmds:
+      - npx vite build
+
+  dev:
+    desc: Start dev server
+    deps: [install]
+    cmds:
+      - npx vite
+    interactive: true
+
+  preview:
+    desc: Start preview server
+    deps: [build]
+    cmds:
+      - npx vite preview
+    interactive: true

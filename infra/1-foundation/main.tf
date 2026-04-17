@@ -138,12 +138,7 @@ resource "random_id" "assets_bucket_random_id" {
   byte_length = 4
 }
 
-resource "random_id" "root_bucket_random_id" {
-  byte_length = 4
-}
-
-# Public assets bucket — CSS, images. Served via Cloud CDN. JS is intentionally excluded
-# (served IAP-protected via Cloud Run from the root bucket instead).
+# Public assets bucket — CSS, images. Served via Cloud CDN.
 resource "google_storage_bucket" "assets_bucket" {
   project                     = var.gcp_project_id
   name                        = "${module.common.project_base_name}-assets-${random_id.assets_bucket_random_id.hex}"
@@ -160,16 +155,7 @@ resource "google_storage_bucket_iam_member" "assets_bucket_public_reader" {
   member = "allUsers"
 }
 
-# Root bucket — index.html and JS bundles. Served IAP-protected via Cloud Run.
-resource "google_storage_bucket" "root_bucket" {
-  project                     = var.gcp_project_id
-  name                        = "${module.common.project_base_name}-root-${random_id.root_bucket_random_id.hex}"
-  location                    = module.common.gcp_primary_location
-  uniform_bucket_level_access = true
-  force_destroy               = true # This project is experimental
-}
-
-# %% Cloud Run: nginx serving root bucket via GCS volume mount %%
+# %% Cloud Run: Go frontend serving baked-in HTML + JS %%
 
 # Dedicated service account for the Cloud Run frontend service.
 resource "google_service_account" "frontend_sa" {
@@ -178,15 +164,7 @@ resource "google_service_account" "frontend_sa" {
   display_name = "Frontend Cloud Run Service Account"
 }
 
-# Grant the frontend SA read access to the root bucket.
-resource "google_storage_bucket_iam_member" "root_bucket_run_reader" {
-  bucket = google_storage_bucket.root_bucket.name
-  role   = "roles/storage.objectViewer"
-  member = "serviceAccount:${google_service_account.frontend_sa.email}"
-}
-
-# nginx serves the mounted root bucket (index.html + JS bundles) behind IAP.
-# Gen2 execution environment is required for GCS volume mounts.
+# Go frontend server with baked-in index.html and JS bundles behind IAP.
 resource "google_cloud_run_v2_service" "frontend" {
   name                = "${module.common.project_base_name}-frontend"
   location            = module.common.gcp_primary_location
@@ -194,27 +172,13 @@ resource "google_cloud_run_v2_service" "frontend" {
   ingress             = "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER"
 
   template {
-    service_account       = google_service_account.frontend_sa.email
-    execution_environment = "EXECUTION_ENVIRONMENT_GEN2"
+    service_account = google_service_account.frontend_sa.email
 
     containers {
-      image = "nginx:alpine"
+      image = "us-docker.pkg.dev/cloudrun/container/hello"
 
       ports {
-        container_port = 80 # Nginx default
-      }
-
-      volume_mounts {
-        name       = "root-bucket"
-        mount_path = "/usr/share/nginx/html"
-      }
-    }
-
-    volumes {
-      name = "root-bucket"
-      gcs {
-        bucket    = google_storage_bucket.root_bucket.name
-        read_only = true
+        container_port = 8080
       }
     }
   }
@@ -222,6 +186,11 @@ resource "google_cloud_run_v2_service" "frontend" {
   traffic {
     type    = "TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST"
     percent = 100
+  }
+
+  # noinspection HILUnresolvedReference
+  lifecycle {
+    ignore_changes = [template[0].containers[0].image]
   }
 }
 
@@ -276,7 +245,7 @@ resource "google_compute_managed_ssl_certificate" "cert" {
 # %%% Backend: assets bucket (CSS + images, public CDN) %%%
 
 # Content-hashed CSS and images served via Cloud CDN with a 1-year TTL.
-# JS bundles are intentionally excluded — they are served IAP-protected via Cloud Run.
+# JS bundles and index.html are baked into the Go frontend container, not served from here.
 resource "google_compute_backend_bucket" "assets_backend" {
   name        = "${module.common.project_base_name}-assets-backend"
   bucket_name = google_storage_bucket.assets_bucket.name
@@ -347,7 +316,7 @@ resource "google_compute_url_map" "url_map" {
     default_service = google_compute_backend_service.frontend_backend.id
 
     # CSS, images, fonts — public CDN, long cache.
-    # JS is at /js/* (not /assets/*) so this rule never matches JS bundles.
+    # JS bundles are at /js/* (served by the Go frontend container, not here).
     path_rule {
       paths   = ["/assets/*"]
       service = google_compute_backend_bucket.assets_backend.id
@@ -405,9 +374,14 @@ output "assets_bucket_name" {
   value       = google_storage_bucket.assets_bucket.name
 }
 
-output "root_bucket_name" {
-  description = "Name of the Cloud Storage bucket holding IAP-protected HTML and JS bundles."
-  value       = google_storage_bucket.root_bucket.name
+output "frontend_service_name" {
+  description = "Name of the Cloud Run frontend service."
+  value       = google_cloud_run_v2_service.frontend.name
+}
+
+output "frontend_service_location" {
+  description = "Location of the Cloud Run frontend service."
+  value       = google_cloud_run_v2_service.frontend.location
 }
 
 output "load_balancer_ip" {

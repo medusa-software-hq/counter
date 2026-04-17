@@ -1,0 +1,87 @@
+name: counter-service
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "services/counter-service/**"
+  pull_request:
+    paths:
+      - "services/counter-service/**"
+
+env:
+  JAVA_DISTRIBUTION: temurin
+  JAVA_VERSION: 21
+  NO_COLOR: 1
+
+  IMAGE_REF: ${{ vars.GCP_AR_REPO_ENDPOINT }}/counter-service
+  IMAGE_TAG: ${{ github.sha }}
+
+permissions: read-all
+
+# All required jobs should be marked as such in Terraform `0-bootstrap` config
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v6.0.2
+
+      - uses: google-github-actions/auth@v3.0.0
+        with:
+          workload_identity_provider: ${{ vars.GCP_GH_ACTIONS_WORKLOAD_IDENTITY_PROVIDER_NAME }}
+          service_account: ${{ vars.GCP_CI_CD_SA_EMAIL }}
+
+      - uses: actions/setup-java@v5.2.0
+        with:
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6.1.0
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ vars.GCP_AR_REPO_HOSTNAME }} --quiet
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+      - name: Build and push image
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: >
+          ./gradlew :server:jib
+          -Pjib.imageRef=${{ env.IMAGE_REF }}
+          -Pjib.imageTag=${{ env.IMAGE_TAG }}
+        working-directory: services/counter-service
+
+      - name: Build image tarball
+        if: github.event_name == 'pull_request'
+        run: ./gradlew :server:jibBuildTar
+        working-directory: services/counter-service
+
+  deploy:
+    name: Deploy
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: google-github-actions/auth@v3.0.0
+        with:
+          workload_identity_provider: ${{ vars.GCP_GH_ACTIONS_WORKLOAD_IDENTITY_PROVIDER_NAME }}
+          service_account: ${{ vars.GCP_CI_CD_SA_EMAIL }}
+
+      - name: Deploy to Cloud Run
+        run: >
+          gcloud run deploy ${{ vars.GCP_COUNTER_SERVICE_NAME }}
+          --project=${{ vars.GCP_PROJECT_ID }}
+          --region=${{ vars.GCP_COUNTER_SERVICE_LOCATION }}
+          --image=${{ env.IMAGE_REF }}:${{ env.IMAGE_TAG }}
+          --quiet
