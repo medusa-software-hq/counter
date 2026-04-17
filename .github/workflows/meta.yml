@@ -1,0 +1,33 @@
+# Workflow for checking GitHub workflows
+name: Meta
+
+.paths: &paths
+  - ".github/workflows/**"
+
+on:
+  push:
+    branches: ["trunk/*"]
+    paths: *paths
+  pull_request:
+    paths: *paths
+
+env:
+  NO_COLOR: 1
+
+permissions: read-all
+
+jobs:
+  pre-commit:
+    name: pre-commit
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6.0.2
+
+      - name: Install github-ci
+        run: |
+          go install github.com/reugn/github-ci/cmd/github-ci@latest
+          echo "$HOME/go/bin" >> "$GITHUB_PATH"
+
+      - name: Lint GitHub workflows
+        run: github-ci lint
