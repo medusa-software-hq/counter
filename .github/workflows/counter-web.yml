@@ -14,10 +14,11 @@ permissions:
 
 env:
   NODE_VERSION: 24
+  GO_VERSION: 1.26
   NO_COLOR: 1
 
 jobs:
-  build:
+  build-frontend:
     name: Build (counter-web/frontend)
     runs-on: ubuntu-latest
 
@@ -39,3 +40,30 @@ jobs:
       - name: Build frontend
         run: task build
         working-directory: apps/counter-web/frontend
+
+  build-backend:
+    name: Build (counter-web/backend)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6.0.2
+
+      - uses: actions/setup-go@v5.5.0
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: apps/counter-web/backend/go.sum
+
+      - uses: go-task/setup-task@v2
+
+      - name: Check formatting
+        run: task checkFormatting
+        working-directory: apps/counter-web/backend
+
+      - name: Lint
+        uses: golangci/golangci-lint-action@v8
+        with:
+          working-directory: apps/counter-web/backend
+
+      - name: Build backend
+        run: task build
+        working-directory: apps/counter-web/backend
