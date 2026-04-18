@@ -55,17 +55,17 @@ resource "github_repository_ruleset" "default_branch" {
 
     required_status_checks {
       required_check {
-        context        = "Lint GitHub workflows"
+        context        = "workflows / Lint GitHub workflows"
         integration_id = local.gh_actions_integration_id
       }
 
       required_check {
-        context        = "Build frontend (counter-web)"
+        context        = "counter-web / Build backend"
         integration_id = local.gh_actions_integration_id
       }
 
       required_check {
-        context        = "Build backend (counter-web)"
+        context        = "counter-web / Build frontend"
         integration_id = local.gh_actions_integration_id
       }
 
