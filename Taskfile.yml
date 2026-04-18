@@ -1,6 +1,10 @@
 version: '3'
 
 includes:
+  infra:
+    taskfile: infra/Taskfile.yml
+    dir: infra
+
   counter-web:
     taskfile: apps/counter-web/frontend/Taskfile.yml
     dir: apps/counter-web/frontend
@@ -27,16 +31,16 @@ tasks:
 
   checkFormatting-all:
     desc: Check formatting for the entire codebase
-    deps: [ github-ci:lint, counter-web:checkFormatting ]
+    deps: [ infra:checkFormatting, github-ci:lint, counter-web:checkFormatting ]
 
   fixFormatting-all:
     desc: Fix formatting for the entire codebase
-    deps: [ github-ci:fixLint, counter-web:fixFormatting ]
+    deps: [ infra:fixFormatting, github-ci:fixLint, counter-web:fixFormatting ]
 
   lint-all:
     desc: Lint the entire codebase
-    deps: [ github-ci:lint, counter-web:lint ]
+    deps: [ infra:lint, github-ci:lint, counter-web:lint ]
 
   analyze-all:
     desc: Analyze the entire codebase
-    deps: [ counter-web:typecheck ]
+    deps: [ infra:validate, counter-web:typecheck ]
