@@ -1,0 +1,27 @@
+version: '3'
+
+includes:
+  frontend:
+    taskfile: frontend/Taskfile.yml
+    dir: frontend
+
+  backend:
+    taskfile: backend/Taskfile.yml
+    dir: backend
+
+tasks:
+  checkFormatting:
+    desc: Check formatting (frontend + backend)
+    deps: [frontend:checkFormatting, backend:checkFormatting]
+
+  fixFormatting:
+    desc: Fix formatting (frontend + backend)
+    deps: [frontend:fixFormatting, backend:fixFormatting]
+
+  lint:
+    desc: Lint the app sources (frontend + backend)
+    deps: [frontend:lint, backend:lint]
+
+  analyze:
+    desc: Analyze the app sources (frontend + backend)
+    deps: [frontend:typecheck, backend:build]

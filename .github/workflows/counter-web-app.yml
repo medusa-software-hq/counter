@@ -1,10 +1,10 @@
-name: counter-web
+name: counter-web (app)
 
 on:
   push:
     branches: ["trunk/*"]
     paths: &trigger-paths
-      - "apps/counter-web/**"
+      - "apps/counter-web/app/**"
 
   pull_request:
     paths: *trigger-paths
@@ -17,9 +17,12 @@ env:
   GO_VERSION: 1.26
   NO_COLOR: 1
 
+  FRONTEND_PATH: apps/counter-web/app/frontend
+  BACKEND_PATH: apps/counter-web/app/backend
+
 jobs:
   build-frontend:
-    name: Build (counter-web/frontend)
+    name: Build frontend (counter-web)
     runs-on: ubuntu-latest
 
     steps:
@@ -29,20 +32,20 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
-          cache-dependency-path: apps/counter-web/frontend/package-lock.json
+          cache-dependency-path: ${{ env.FRONTEND_PATH }}/package-lock.json
 
       - uses: go-task/setup-task@v2
 
       - name: Check formatting and lint
         run: task checkFormatting lint
-        working-directory: apps/counter-web/frontend
+        working-directory: ${{ env.FRONTEND_PATH }}
 
       - name: Build frontend
         run: task build
-        working-directory: apps/counter-web/frontend
+        working-directory: ${{ env.FRONTEND_PATH }}
 
   build-backend:
-    name: Build (counter-web/backend)
+    name: Build backend (counter-web)
     runs-on: ubuntu-latest
 
     steps:
@@ -51,19 +54,19 @@ jobs:
       - uses: actions/setup-go@v5.5.0
         with:
           go-version: ${{ env.GO_VERSION }}
-          cache-dependency-path: apps/counter-web/backend/go.sum
+          cache-dependency-path: ${{ env.BACKEND_PATH }}/go.sum
 
       - uses: go-task/setup-task@v2
 
       - name: Check formatting
         run: task checkFormatting
-        working-directory: apps/counter-web/backend
+        working-directory: ${{ env.BACKEND_PATH }}
 
       - name: Lint
         uses: golangci/golangci-lint-action@v8
         with:
-          working-directory: apps/counter-web/backend
+          working-directory: ${{ env.BACKEND_PATH }}
 
       - name: Build backend
         run: task build
-        working-directory: apps/counter-web/backend
+        working-directory: ${{ env.BACKEND_PATH }}
