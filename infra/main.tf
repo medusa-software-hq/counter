@@ -5,7 +5,7 @@ terraform {
 
   backend "gcs" {
     bucket = "ms-tfstate-c1984596bdabf023"
-    prefix = "projects/counter/v2/bootstrap"
+    prefix = "projects/counter/v2/root"
   }
 
   required_providers {
@@ -19,7 +19,7 @@ terraform {
 # Module imports
 
 module "common" {
-  source = "../modules/common"
+  source = "./common"
 }
 
 # Providers
