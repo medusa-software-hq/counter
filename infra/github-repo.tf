@@ -26,6 +26,11 @@ resource "github_repository" "this" {
 locals {
   # GitHub Actions integration ID (discovered manually)
   gh_actions_integration_id = 15368
+
+  check_workflows_job_name         = "workflows"
+  check_infra_job_name             = "infra"
+  check_counter_web_infra_job_name = "counter-web (infra)"
+  check_counter_web_app_job_name   = "counter-web (app)"
 }
 
 # Branch protection ruleset for the default branch
@@ -56,22 +61,27 @@ resource "github_repository_ruleset" "default_branch" {
 
     required_status_checks {
       required_check {
-        context        = "workflows / Lint GitHub workflows"
+        context        = "${local.check_workflows_job_name} / Lint GitHub workflows"
         integration_id = local.gh_actions_integration_id
       }
 
       required_check {
-        context        = "infra / Check Terraform formatting"
+        context        = "${local.check_infra_job_name} / Check Terraform formatting"
         integration_id = local.gh_actions_integration_id
       }
 
       required_check {
-        context        = "counter-web / Build backend"
+        context        = "${local.check_counter_web_infra_job_name} / Check Terraform configuration"
         integration_id = local.gh_actions_integration_id
       }
 
       required_check {
-        context        = "counter-web / Build frontend"
+        context        = "${local.check_counter_web_app_job_name} / Build backend"
+        integration_id = local.gh_actions_integration_id
+      }
+
+      required_check {
+        context        = "${local.check_counter_web_app_job_name} / Build frontend"
         integration_id = local.gh_actions_integration_id
       }
 

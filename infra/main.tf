@@ -9,6 +9,14 @@ terraform {
   }
 
   required_providers {
+    google = {
+      source  = "hashicorp/google"
+      version = "~> 7.25"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.8"
+    }
     github = {
       source  = "integrations/github"
       version = "~> 6.11"
@@ -23,6 +31,23 @@ module "common" {
 }
 
 # Providers
+
+# Primary Google provider
+provider "google" {
+  project = module.common.gcp_meta_project_id
+  region  = module.common.gcp_primary_location
+}
+
+# Secondary Google provider
+provider "google" {
+  alias   = "orgpolicy"
+  project = module.common.gcp_meta_project_id
+  region  = module.common.gcp_primary_location
+
+  # Allow overriding the project for organization policy resources
+  user_project_override = true
+  billing_project       = local.gcp_project_id
+}
 
 # GitHub provider for accessing CI/CD variables
 
