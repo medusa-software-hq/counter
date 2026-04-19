@@ -22,8 +22,15 @@ tasks:
     cmds:
       - tflint --recursive
 
+  init:
+    desc: Initialize the Terraform working directory
+    sources: *terraformSources
+    cmds:
+      - terraform init
+
   validate:
     desc: Validate the Terraform configuration
+    deps: [init]
     sources: *terraformSources
     cmds:
       - terraform validate
