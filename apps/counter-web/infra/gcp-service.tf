@@ -11,6 +11,7 @@ resource "google_cloud_run_v2_service" "primary" {
   location            = module.common.gcp_primary_location
   deletion_protection = false # This project is experimental
   ingress             = "INGRESS_TRAFFIC_ALL"
+  iap_enabled         = true
 
   template {
     service_account = google_service_account.primary_service_sa.email
@@ -27,7 +28,12 @@ resource "google_cloud_run_v2_service" "primary" {
 
   # The image is managed by CI/CD after initial creation.
   lifecycle {
-    ignore_changes = [template[0].containers[0].image, client, client_version]
+    # noinspection HILUnresolvedReference
+    ignore_changes = [
+      template[0].containers[0].image,
+      client,
+      client_version,
+    ]
   }
 
   traffic {
@@ -36,13 +42,10 @@ resource "google_cloud_run_v2_service" "primary" {
   }
 }
 
-resource "google_cloud_run_service_iam_member" "primary_service_public_access" {
-  location = google_cloud_run_v2_service.primary.location
-  project  = google_cloud_run_v2_service.primary.project
-  service  = google_cloud_run_v2_service.primary.name
-
-  role   = "roles/run.invoker"
-  member = "allUsers"
+resource "google_iap_web_iam_member" "domain_access" {
+  project = var.gcp_project_id
+  role    = "roles/iap.httpsResourceAccessor"
+  member  = "domain:${module.common.organization_domain}"
 }
 
 output "cloud_run_primary_service_url" {

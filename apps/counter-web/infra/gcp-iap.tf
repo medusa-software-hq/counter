@@ -1,0 +1,15 @@
+# Ensure the IAP managed service agent exists for this project.
+resource "google_project_service_identity" "iap_sa" {
+  provider = google-beta
+  project  = var.gcp_project_id
+  service  = "iap.googleapis.com"
+}
+
+# Allow the IAP managed service agent to invoke the Cloud Run frontend service.
+resource "google_cloud_run_v2_service_iam_member" "run_invoker_iap" {
+  project  = var.gcp_project_id
+  location = google_cloud_run_v2_service.primary.location
+  name     = google_cloud_run_v2_service.primary.name
+  role     = "roles/run.invoker"
+  member   = google_project_service_identity.iap_sa.member
+}

@@ -32,15 +32,15 @@ locals {
 # Enabled GCP APIs
 resource "google_project_service" "apis" {
   for_each = toset([
+    "cloudresourcemanager.googleapis.com",
+    "compute.googleapis.com",
     "iam.googleapis.com",
     "iamcredentials.googleapis.com",
-    "cloudresourcemanager.googleapis.com",
-    "storage.googleapis.com",
-    "compute.googleapis.com",
-    "serviceusage.googleapis.com",
-    "run.googleapis.com",
     "iap.googleapis.com",
     "orgpolicy.googleapis.com",
+    "run.googleapis.com",
+    "serviceusage.googleapis.com",
+    "storage.googleapis.com",
   ])
 
   project            = google_project.gcp_project.id
