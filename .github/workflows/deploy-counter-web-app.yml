@@ -6,6 +6,8 @@ on:
     paths:
       - "apps/counter-web/app/**"
 
+  workflow_dispatch:
+
 permissions:
   contents: read
 
