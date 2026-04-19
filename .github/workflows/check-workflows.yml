@@ -1,13 +1,7 @@
 name: Check GitHub workflows
 
 on:
-  push:
-    branches: ["trunk/*"]
-    paths: &trigger-paths
-      - ".github/workflows/**"
-
-  pull_request:
-    paths: *trigger-paths
+  workflow_call:
 
 permissions:
   contents: read

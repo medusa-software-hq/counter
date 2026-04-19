@@ -1,0 +1,16 @@
+name: Check PR
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check-workflows:
+    name: workflows
+    uses: ./.github/workflows/check-workflows.yml
+
+  check-counter-web-app:
+    name: counter-web
+    uses: ./.github/workflows/check-counter-web-app.yml
