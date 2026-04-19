@@ -9,6 +9,10 @@ includes:
     taskfile: apps/counter-web/app/Taskfile.yml
     dir: apps/counter-web/app
 
+  counter-web:infra:
+    taskfile: apps/counter-web/infra/Taskfile.yml
+    dir: apps/counter-web/infra
+
 tasks:
   github-ci:lint:
     desc: Lint GitHub workflows
@@ -35,6 +39,7 @@ tasks:
       - github-ci:lint
       - infra:checkFormatting
       - counter-web:app:checkFormatting
+      - counter-web:infra:checkFormatting
 
   fixFormatting-all:
     desc: Fix formatting for the entire codebase
@@ -42,6 +47,7 @@ tasks:
       - github-ci:fixLint
       - infra:fixFormatting
       - counter-web:app:fixFormatting
+      - counter-web:infra:fixFormatting
 
   lint-all:
     desc: Lint the entire codebase
@@ -49,9 +55,11 @@ tasks:
       - github-ci:lint
       - infra:lint
       - counter-web:app:lint
+      - counter-web:infra:lint
 
   analyze-all:
     desc: Analyze the entire codebase
     deps:
       - infra:validate
       - counter-web:app:analyze
+      - counter-web:infra:validate
