@@ -64,3 +64,13 @@ jobs:
       - name: Build backend
         run: task build
         working-directory: ${{ env.BACKEND_PATH }}
+
+  build-image:
+    name: Build Docker image
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6.0.2
+
+      - name: Build image
+        run: docker build ${{ env.BACKEND_PATH }}/
