@@ -12,6 +12,12 @@ resource "github_actions_variable" "gcp_primary_location" {
   value         = module.common.gcp_primary_location
 }
 
+resource "github_actions_variable" "gcp_counter_service_run_service_name" {
+  repository    = github_repository.this.name
+  variable_name = "GCP_COUNTER_SERVICE_RUN_SERVICE_NAME"
+  value         = module.common.gcp_counter_service_run_service_name
+}
+
 resource "github_actions_variable" "gcp_counter_web_service_name" {
   repository    = github_repository.this.name
   variable_name = "GCP_COUNTER_WEB_RUN_SERVICE_NAME"
