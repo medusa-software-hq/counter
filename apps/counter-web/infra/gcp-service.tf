@@ -1,13 +1,13 @@
 # Dedicated service account for the Cloud Run frontend service.
 resource "google_service_account" "primary_service_sa" {
   project      = var.gcp_project_id
-  account_id   = "${local.counter_web_prefix}-sa"
+  account_id   = "${module.common.gcp_counter_web_run_service_name}-sa"
   display_name = "Cloud Run Service Account"
 }
 
 # The primary Cloud Run service for the app
 resource "google_cloud_run_v2_service" "primary" {
-  name                = local.counter_web_prefix
+  name                = module.common.gcp_counter_web_run_service_name
   location            = module.common.gcp_primary_location
   deletion_protection = false # This project is experimental
   ingress             = "INGRESS_TRAFFIC_ALL"
@@ -16,13 +16,18 @@ resource "google_cloud_run_v2_service" "primary" {
     service_account = google_service_account.primary_service_sa.email
 
     containers {
-      # Placeholder image
+      # Initial placeholder; CI/CD will deploy the real image from Artifact Registry.
       image = "us-docker.pkg.dev/cloudrun/container/hello"
 
       ports {
         container_port = 8080
       }
     }
+  }
+
+  # The image is managed by CI/CD after initial creation.
+  lifecycle {
+    ignore_changes = [template[0].containers[0].image]
   }
 
   traffic {

@@ -50,10 +50,31 @@ resource "google_storage_bucket_iam_member" "cicd_sa_object_admin" {
   }
 }
 
+# Grant CI/CD SA storage admin on the GCP project (create buckets, upload files)
+resource "google_project_iam_member" "cicd_sa_storage_admin" {
+  project = local.gcp_project_id
+  role    = "roles/storage.admin"
+  member  = "serviceAccount:${google_service_account.cicd_sa.email}"
+}
+
+# Grant CI/CD SA compute admin on the GCP project (manage ALB, URL maps, SSL certs)
+resource "google_project_iam_member" "cicd_sa_compute_admin" {
+  project = local.gcp_project_id
+  role    = "roles/compute.admin"
+  member  = "serviceAccount:${google_service_account.cicd_sa.email}"
+}
+
 # Grant CI/CD SA Cloud Run admin (deploy Cloud Run services)
 resource "google_project_iam_member" "cicd_sa_run_admin" {
   project = local.gcp_project_id
   role    = "roles/run.admin"
+  member  = "serviceAccount:${google_service_account.cicd_sa.email}"
+}
+
+# Grant CI/CD SA IAP admin (manage IAP access policies)
+resource "google_project_iam_member" "cicd_sa_iap_admin" {
+  project = local.gcp_project_id
+  role    = "roles/iap.admin"
   member  = "serviceAccount:${google_service_account.cicd_sa.email}"
 }
 
@@ -69,6 +90,15 @@ resource "google_project_iam_member" "cicd_sa_sa_user" {
   project = local.gcp_project_id
   role    = "roles/iam.serviceAccountUser"
   member  = "serviceAccount:${google_service_account.cicd_sa.email}"
+}
+
+# Allow the CI/CD SA to push images to Artifact Registry.
+resource "google_artifact_registry_repository_iam_member" "registry_ci_writer" {
+  project    = google_project.gcp_project.project_id
+  location   = module.common.gcp_primary_location
+  repository = google_artifact_registry_repository.primary.repository_id
+  role       = "roles/artifactregistry.writer"
+  member     = "serviceAccount:${google_service_account.cicd_sa.email}"
 }
 
 # Outputs

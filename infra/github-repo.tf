@@ -85,6 +85,11 @@ resource "github_repository_ruleset" "default_branch" {
         integration_id = local.gh_actions_integration_id
       }
 
+      required_check {
+        context        = "${local.check_counter_web_app_job_name} / Build Docker image"
+        integration_id = local.gh_actions_integration_id
+      }
+
       strict_required_status_checks_policy = true
     }
   }

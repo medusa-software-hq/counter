@@ -11,6 +11,7 @@ env:
   GO_VERSION: 1.26
   NO_COLOR: 1
 
+  APP_PATH: apps/counter-web/app
   FRONTEND_PATH: apps/counter-web/app/frontend
   BACKEND_PATH: apps/counter-web/app/backend
 
@@ -64,3 +65,14 @@ jobs:
       - name: Build backend
         run: task build
         working-directory: ${{ env.BACKEND_PATH }}
+
+  build-image:
+    name: Build Docker image
+    needs: [build-frontend]
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6.0.2
+
+      - name: Build image
+        run: docker build ${{ env.APP_PATH }}/
