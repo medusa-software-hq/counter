@@ -7,6 +7,10 @@ permissions:
   contents: read
 
 jobs:
+  check-infra:
+    name: infra
+    uses: ./.github/workflows/check-infra.yml
+
   check-workflows:
     name: workflows
     uses: ./.github/workflows/check-workflows.yml

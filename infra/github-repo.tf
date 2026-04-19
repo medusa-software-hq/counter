@@ -2,8 +2,9 @@
 
 # This repository
 resource "github_repository" "this" {
-  name       = module.common.gh_repo_name
-  visibility = "private"
+  name        = module.common.gh_repo_name
+  description = "Variant: ${module.common.project_variant}"
+  visibility  = "private"
 
   has_discussions = false
   has_issues      = false
@@ -56,6 +57,11 @@ resource "github_repository_ruleset" "default_branch" {
     required_status_checks {
       required_check {
         context        = "workflows / Lint GitHub workflows"
+        integration_id = local.gh_actions_integration_id
+      }
+
+      required_check {
+        context        = "infra / Check Terraform formatting"
         integration_id = local.gh_actions_integration_id
       }
 
