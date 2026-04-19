@@ -1,0 +1,23 @@
+[versions]
+armeria = "1.38.0"
+detekt = "1.23.8"
+jib = "3.5.3"
+kotlin = "2.3.20"
+kotlin-coroutines = "1.10.2"
+ktfmt = "0.26.0"
+logback = "1.5.32"
+versionCatalogUpdate = "1.1.0"
+
+[libraries]
+armeria-bom = { module = "com.linecorp.armeria:armeria-bom", version.ref = "armeria" }
+armeria-kotlin = { module = "com.linecorp.armeria:armeria-kotlin", version.ref = "armeria" }
+kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlin-coroutines" }
+logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+
+[plugins]
+detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
+jib = { id = "com.google.cloud.tools.jib", version.ref = "jib" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+ktfmt = { id = "com.ncorti.ktfmt.gradle", version.ref = "ktfmt" }
+versionCatalogUpdate = { id = "nl.littlerobots.version-catalog-update", version.ref = "versionCatalogUpdate" }

@@ -1,0 +1,38 @@
+plugins {
+  alias(libs.plugins.jib)
+  alias(libs.plugins.kotlin.jvm)
+
+  application
+}
+
+val javaVersion = 21
+
+val containerPort = 8080
+val containerImageRef = findProperty("jib.imageRef")?.toString() ?: "counter-service"
+val containerImageTag = findProperty("jib.imageTag")?.toString() ?: "local"
+
+dependencies {
+  implementation(platform(libs.armeria.bom))
+
+  implementation(libs.armeria.kotlin)
+  implementation(libs.kotlinx.coroutines.core)
+  runtimeOnly(libs.logback.classic)
+
+  testImplementation(libs.kotlin.test)
+}
+
+application { mainClass = "software.medusa.counter.server.MainKt" }
+
+jib {
+  from { image = "eclipse-temurin:$javaVersion-jre-alpine" }
+
+  to {
+    image = containerImageRef
+    tags = setOf(containerImageTag)
+  }
+
+  container {
+    ports = listOf(containerPort.toString())
+    mainClass = "software.medusa.counter.server.MainKt"
+  }
+}

@@ -28,3 +28,17 @@ jobs:
   check-counter-web-app:
     name: counter-web (app)
     uses: ./.github/workflows/check-counter-web-app.yml
+
+  check-counter-service-service:
+    name: counter-service (service)
+    uses: ./.github/workflows/check-counter-service-service.yml
+
+  check-counter-service-infra:
+    name: counter-service (infra)
+    uses: ./.github/workflows/check-counter-service-infra.yml
+    secrets: inherit
+
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write

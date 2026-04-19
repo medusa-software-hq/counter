@@ -27,10 +27,12 @@ locals {
   # GitHub Actions integration ID (discovered manually)
   gh_actions_integration_id = 15368
 
-  check_workflows_job_name         = "workflows"
-  check_infra_job_name             = "infra"
-  check_counter_web_infra_job_name = "counter-web (infra)"
-  check_counter_web_app_job_name   = "counter-web (app)"
+  check_workflows_job_name               = "workflows"
+  check_infra_job_name                   = "infra"
+  check_counter_web_infra_job_name       = "counter-web (infra)"
+  check_counter_web_app_job_name         = "counter-web (app)"
+  check_counter_service_infra_job_name   = "counter-service (infra)"
+  check_counter_service_service_job_name = "counter-service (service)"
 }
 
 # Branch protection ruleset for the default branch
@@ -87,6 +89,16 @@ resource "github_repository_ruleset" "default_branch" {
 
       required_check {
         context        = "${local.check_counter_web_app_job_name} / Build Docker image"
+        integration_id = local.gh_actions_integration_id
+      }
+
+      required_check {
+        context        = "${local.check_counter_service_infra_job_name} / Check Terraform configuration"
+        integration_id = local.gh_actions_integration_id
+      }
+
+      required_check {
+        context        = "${local.check_counter_service_service_job_name} / Check service"
         integration_id = local.gh_actions_integration_id
       }
 

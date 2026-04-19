@@ -13,6 +13,14 @@ includes:
     taskfile: apps/counter-web/infra/Taskfile.yml
     dir: apps/counter-web/infra
 
+  counter-service:service:
+    taskfile: services/counter-service/service/Taskfile.yml
+    dir: services/counter-service/service
+
+  counter-service:infra:
+    taskfile: services/counter-service/infra/Taskfile.yml
+    dir: services/counter-service/infra
+
 tasks:
   github-ci:lint:
     desc: Lint GitHub workflows
@@ -40,6 +48,8 @@ tasks:
       - infra:checkFormatting
       - counter-web:app:checkFormatting
       - counter-web:infra:checkFormatting
+      - counter-service:service:checkFormatting
+      - counter-service:infra:checkFormatting
 
   fixFormatting-all:
     desc: Fix formatting for the entire codebase
@@ -48,6 +58,8 @@ tasks:
       - infra:fixFormatting
       - counter-web:app:fixFormatting
       - counter-web:infra:fixFormatting
+      - counter-service:service:fixFormatting
+      - counter-service:infra:fixFormatting
 
   lint-all:
     desc: Lint the entire codebase
@@ -56,6 +68,8 @@ tasks:
       - infra:lint
       - counter-web:app:lint
       - counter-web:infra:lint
+      - counter-service:service:lint
+      - counter-service:infra:lint
 
   analyze-all:
     desc: Analyze the entire codebase
@@ -63,3 +77,4 @@ tasks:
       - infra:validate
       - counter-web:app:analyze
       - counter-web:infra:validate
+      - counter-service:infra:validate
