@@ -61,6 +61,11 @@ resource "github_repository_ruleset" "default_branch" {
       }
 
       required_check {
+        context        = "infra / Check Terraform formatting"
+        integration_id = local.gh_actions_integration_id
+      }
+
+      required_check {
         context        = "counter-web / Build backend"
         integration_id = local.gh_actions_integration_id
       }
