@@ -5,6 +5,11 @@ terraform {
 locals {
   organization_domain = "medusa.software"
 
+  gcp_organization_prefix         = "ms"
+  gcp_primary_location            = "europe-west1"
+  gcp_meta_project_id             = "ms-meta-9aaf29f0"
+  gcp_terraform_state_bucket_name = "ms-tfstate-c1984596bdabf023"
+
   gh_organization_name = "medusa-software-hq"
   gh_repo_name         = "counter"
 
@@ -14,6 +19,22 @@ locals {
 
 output "organization_domain" {
   value = local.organization_domain
+}
+
+output "gcp_organization_prefix" {
+  value = local.gcp_organization_prefix
+}
+
+output "gcp_primary_location" {
+  value = local.gcp_primary_location
+}
+
+output "gcp_meta_project_id" {
+  value = local.gcp_meta_project_id
+}
+
+output "gcp_terraform_state_bucket_name" {
+  value = local.gcp_terraform_state_bucket_name
 }
 
 output "gh_organization_name" {
