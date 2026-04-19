@@ -3,8 +3,8 @@ name: Apply counter-web infra
 on:
   push:
     branches: ["trunk/*"]
-    paths: &trigger-paths
-      - ".github/workflows/**"
+    paths:
+      - "apps/counter-web/infra/**"
 
 permissions:
   contents: read
