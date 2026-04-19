@@ -4,7 +4,7 @@ terraform {
   required_version = ">= 1.14"
 
   backend "gcs" {
-    bucket = "ms-tfstate-f1cbea4f18df7b19"
+    bucket = "ms-tfstate-c1984596bdabf023"
     prefix = "projects/counter/v2/bootstrap"
   }
 
