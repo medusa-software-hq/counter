@@ -10,6 +10,8 @@ locals {
   gcp_meta_project_id             = "ms-meta-9aaf29f0"
   gcp_terraform_state_bucket_name = "ms-tfstate-c1984596bdabf023"
 
+  gcp_counter_web_run_service_name = "counter-web"
+
   gh_organization_name = "medusa-software-hq"
   gh_repo_name         = "counter"
 
@@ -35,6 +37,10 @@ output "gcp_meta_project_id" {
 
 output "gcp_terraform_state_bucket_name" {
   value = local.gcp_terraform_state_bucket_name
+}
+
+output "gcp_counter_web_run_service_name" {
+  value = local.gcp_counter_web_run_service_name
 }
 
 output "gh_organization_name" {

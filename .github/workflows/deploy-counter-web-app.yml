@@ -1,0 +1,57 @@
+name: Deploy counter-web app
+
+on:
+  push:
+    branches: ["trunk/*"]
+    paths:
+      - "apps/counter-web/app/**"
+
+permissions:
+  contents: read
+
+env:
+  NO_COLOR: 1
+
+  # Exact image path is arbitrary (as long as it's unique)
+  IMAGE_REF: ${{ vars.GCP_AR_REPO_ENDPOINT }}/counter-web
+  IMAGE_TAG: ${{ github.sha }}
+
+  BACKEND_PATH: apps/counter-web/app/backend
+
+jobs:
+  deploy-app:
+    name: Deploy app
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    env:
+      FULL_IMAGE_REF: ${{ env.IMAGE_REF }}:${{ env.IMAGE_TAG }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.GCP_CICD_WI_PROVIDER_NAME }}
+          service_account: ${{ vars.GCP_CICD_SA_EMAIL }}
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ vars.GCP_AR_REPO_HOSTNAME }} --quiet
+
+      - name: Build and push image
+        run: |
+          docker build -t ${{ env.FULL_IMAGE_REF }} ${{ env.BACKEND_PATH }}
+          docker push ${{ env.FULL_IMAGE_REF }}
+
+      - name: Deploy to Cloud Run
+        run: >
+          gcloud run deploy ${{ vars.GCP_COUNTER_WEB_RUN_SERVICE_NAME }}
+          --project=${{ vars.GCP_PROJECT_ID }}
+          --region=${{ vars.GCP_PRIMARY_LOCATION }}
+          --image=${{ env.FULL_IMAGE_REF }}
+          --quiet
