@@ -11,6 +11,7 @@ env:
   GO_VERSION: 1.26
   NO_COLOR: 1
 
+  APP_PATH: apps/counter-web/app
   FRONTEND_PATH: apps/counter-web/app/frontend
   BACKEND_PATH: apps/counter-web/app/backend
 
@@ -73,4 +74,4 @@ jobs:
       - uses: actions/checkout@v6.0.2
 
       - name: Build image
-        run: docker build ${{ env.BACKEND_PATH }}/
+        run: docker build ${{ env.APP_PATH }}/
