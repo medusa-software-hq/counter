@@ -31,6 +31,15 @@ resource "google_cloud_run_v2_service" "primary" {
   }
 }
 
+resource "google_cloud_run_service_iam_member" "primary_service_public_access" {
+  location = google_cloud_run_v2_service.primary.location
+  project  = google_cloud_run_v2_service.primary.project
+  service  = google_cloud_run_v2_service.primary.name
+
+  role   = "roles/run.invoker"
+  member = "allUsers"
+}
+
 output "cloud_run_primary_service_url" {
   value = google_cloud_run_v2_service.primary.uri
 }
