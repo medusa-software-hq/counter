@@ -35,6 +35,7 @@ tasks:
     desc: Run the HTTP server
     env:
       PORT: '8080'
+      FRONTEND_DIST_DIR: ../frontend/dist
     cmds:
       - go run .
     interactive: true
