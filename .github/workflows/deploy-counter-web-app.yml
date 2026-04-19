@@ -27,9 +27,6 @@ jobs:
       contents: read
       id-token: write
 
-    env:
-      FULL_IMAGE_REF: ${{ env.IMAGE_REF }}:${{ env.IMAGE_TAG }}
-
     steps:
       - name: Checkout
         uses: actions/checkout@v6
