@@ -7,6 +7,7 @@ resource "google_service_account" "primary_service_sa" {
 
 # The primary Cloud Run service for the app
 resource "google_cloud_run_v2_service" "primary" {
+  project             = var.gcp_project_id
   name                = module.common.gcp_counter_service_run_service_name
   location            = module.common.gcp_primary_location
   deletion_protection = false # This project is experimental
