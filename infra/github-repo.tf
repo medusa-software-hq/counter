@@ -2,8 +2,9 @@
 
 # This repository
 resource "github_repository" "this" {
-  name       = module.common.gh_repo_name
-  visibility = "private"
+  name        = module.common.gh_repo_name
+  description = "Variant: ${module.common.project_variant}"
+  visibility  = "private"
 
   has_discussions = false
   has_issues      = false
