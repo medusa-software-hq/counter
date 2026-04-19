@@ -25,3 +25,15 @@ tasks:
   analyze:
     desc: Analyze the app sources (frontend + backend)
     deps: [frontend:typecheck, backend:build]
+
+  build:
+    desc: Build the full app (frontend + backend)
+    cmds:
+      - task: frontend:build
+      - task: backend:build
+
+  run:
+    desc: Build frontend then run the backend server
+    cmds:
+      - task: frontend:build
+      - task: backend:run
