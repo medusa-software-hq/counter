@@ -13,10 +13,10 @@ env:
   NO_COLOR: 1
 
   # Exact image path is arbitrary (as long as it's unique)
-  IMAGE_REF: ${{ vars.GCP_AR_REPO_ENDPOINT }}/counter-web
-  IMAGE_TAG: ${{ github.sha }}
+  IMAGE_REF: ${{ vars.GCP_AR_REPO_ENDPOINT }}/counter-web/${{ github.sha }}
 
   BACKEND_PATH: apps/counter-web/app/backend
+  APP_PATH: apps/counter-web/app
 
 jobs:
   deploy-app:
@@ -45,13 +45,13 @@ jobs:
 
       - name: Build and push image
         run: |
-          docker build -t ${{ env.FULL_IMAGE_REF }} ${{ env.BACKEND_PATH }}
-          docker push ${{ env.FULL_IMAGE_REF }}
+          docker build -t ${{ env.IMAGE_REF }} ${{ env.APP_PATH }}
+          docker push ${{ env.IMAGE_REF }}
 
       - name: Deploy to Cloud Run
         run: >
           gcloud run deploy ${{ vars.GCP_COUNTER_WEB_RUN_SERVICE_NAME }}
           --project=${{ vars.GCP_PROJECT_ID }}
           --region=${{ vars.GCP_PRIMARY_LOCATION }}
-          --image=${{ env.FULL_IMAGE_REF }}
+          --image=${{ env.IMAGE_REF }}
           --quiet
