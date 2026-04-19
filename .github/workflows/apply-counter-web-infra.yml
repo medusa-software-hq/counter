@@ -35,6 +35,11 @@ jobs:
           workload_identity_provider: ${{ vars.GCP_CICD_WI_PROVIDER_NAME }}
           service_account: ${{ vars.GCP_CICD_SA_EMAIL }}
 
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: ~> ${{ env.TERRAFORM_VERSION }}
+
       - name: Apply Terraform configuration
         working-directory: apps/counter-web/infra
         env:
