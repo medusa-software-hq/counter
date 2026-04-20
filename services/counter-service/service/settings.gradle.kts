@@ -4,4 +4,6 @@ plugins {
 
 rootProject.name = "counter-service"
 
-include("server")
+include("shared")
+include("local")
+include("gcp")
