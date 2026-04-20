@@ -6,6 +6,12 @@ import './App.css';
 import { useAuth } from './useAuth.tsx';
 import { SignInWall } from './SignInWall.tsx';
 
+const COUNTER_SERVICE_URL = import.meta.env.VITE_COUNTER_SERVICE_URL as string;
+
+if (!COUNTER_SERVICE_URL) {
+  throw new Error('VITE_COUNTER_SERVICE_URL is not set');
+}
+
 function AppContent({ token }: { token: string }) {
   const { handleUnauthorized } = useAuth();
   const [count, setCount] = useState(0);
@@ -13,7 +19,7 @@ function AppContent({ token }: { token: string }) {
   const [messageError, setMessageError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch('/api', {
+    fetch(COUNTER_SERVICE_URL, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => {

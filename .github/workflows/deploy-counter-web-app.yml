@@ -53,6 +53,7 @@ jobs:
           build-args: |
             VITE_GOOGLE_CLIENT_ID=${{ vars.GOOGLE_CLIENT_ID }}
             VITE_GOOGLE_HD=${{ vars.GOOGLE_ALLOWED_DOMAIN }}
+            VITE_COUNTER_SERVICE_URL=${{ vars.GCP_COUNTER_SERVICE_URL }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -62,7 +63,6 @@ jobs:
             --project=${{ vars.GCP_PROJECT_ID }} \
             --region=${{ vars.GCP_PRIMARY_LOCATION }} \
             --image=${{ env.IMAGE_REF }} \
-            --set-env-vars="COUNTER_SERVICE_URL=${{ vars.GCP_COUNTER_SERVICE_URL }}" \
             --quiet
           gcloud run services describe ${{ vars.GCP_COUNTER_WEB_RUN_SERVICE_NAME }} \
             --project=${{ vars.GCP_PROJECT_ID }} \

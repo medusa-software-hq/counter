@@ -33,6 +33,11 @@ resource "google_cloud_run_v2_service" "primary" {
         name  = "GOOGLE_ALLOWED_DOMAIN"
         value = module.common.organization_domain
       }
+
+      env {
+        name  = "CORS_ALLOWED_ORIGIN_REGEX"
+        value = "https://[a-z0-9-]+\\.medusa\\.software"
+      }
     }
   }
 

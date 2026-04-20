@@ -1,17 +1,15 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   plugins: [react()],
-  server: {
-    proxy: {
-      '/api': {
-        target: process.env.COUNTER_SERVICE_URL ?? 'http://localhost:8081',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, '') || '/',
+  ...(command === 'serve' && {
+    resolve: {
+      alias: {
+        '/src/main.tsx': '/src/main.local.tsx',
       },
     },
-  },
+  }),
   build: {
     rollupOptions: {
       output: {
@@ -21,4 +19,4 @@ export default defineConfig({
       },
     },
   },
-});
+}));
