@@ -23,10 +23,21 @@ resource "google_cloud_run_v2_service" "primary" {
       ports {
         container_port = 8080
       }
+
+      env {
+        name  = "GOOGLE_CLIENT_ID"
+        value = module.common.google_client_id
+      }
+
+      env {
+        name  = "GOOGLE_ALLOWED_DOMAIN"
+        value = module.common.organization_domain
+      }
     }
   }
 
   # The image is managed by CI/CD after initial creation.
+  # Env vars are managed by Terraform and must not be overwritten by deploys.
   lifecycle {
     # noinspection HILUnresolvedReference
     ignore_changes = [

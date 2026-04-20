@@ -18,6 +18,10 @@ locals {
 
   project_base_name = "counter"
   project_variant   = "v2"
+
+  # Google OAuth 2.0 client ID for the counter-web app.
+  # https://console.cloud.google.com/auth/clients/852264381191-crah9udgr1d44tposdv348k091t2upb6.apps.googleusercontent.com?project=ms-auth-284371d2
+  google_client_id = "852264381191-crah9udgr1d44tposdv348k091t2upb6.apps.googleusercontent.com"
 }
 
 output "organization_domain" {
@@ -62,4 +66,8 @@ output "project_base_name" {
 
 output "project_variant" {
   value = local.project_variant
+}
+
+output "google_client_id" {
+  value = local.google_client_id
 }

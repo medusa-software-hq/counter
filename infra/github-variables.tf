@@ -56,3 +56,16 @@ resource "github_actions_variable" "gcp_counter_service_url" {
   variable_name = "GCP_COUNTER_SERVICE_URL"
   value         = data.terraform_remote_state.counter_service_infra.outputs.cloud_run_primary_service_url
 }
+
+# Consumed by the counter-web frontend build (baked into the JS bundle).
+resource "github_actions_variable" "google_client_id" {
+  repository    = github_repository.this.name
+  variable_name = "GOOGLE_CLIENT_ID"
+  value         = module.common.google_client_id
+}
+
+resource "github_actions_variable" "google_allowed_domain" {
+  repository    = github_repository.this.name
+  variable_name = "GOOGLE_ALLOWED_DOMAIN"
+  value         = module.common.organization_domain
+}
