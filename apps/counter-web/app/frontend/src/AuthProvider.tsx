@@ -114,7 +114,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         google.accounts.id.prompt((notification) => {
           if (cancelled) return;
           if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-            setState({ status: 'unauthenticated' });
+            // If we had a cached token we're already showing content — stay
+            // authenticated optimistically until the server rejects the token.
+            // Only fall back to the sign-in wall if there was nothing cached.
+            setState((prev) =>
+              prev.status === 'loading' ? { status: 'unauthenticated' } : prev,
+            );
           }
         });
       })

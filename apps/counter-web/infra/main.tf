@@ -17,6 +17,10 @@ terraform {
       source  = "hashicorp/google-beta"
       version = "~> 7.25"
     }
+    cloudflare = {
+      source  = "cloudflare/cloudflare"
+      version = "~> 5.18"
+    }
   }
 }
 
@@ -36,4 +40,16 @@ variable "gcp_project_id" {
 provider "google" {
   project = var.gcp_project_id
   region  = module.common.gcp_primary_location
+}
+
+# Cloudflare provider for managing DNS records
+
+variable "cloudflare_api_token" {
+  description = "Cloudflare API token."
+  type        = string
+  sensitive   = true
+}
+
+provider "cloudflare" {
+  api_token = var.cloudflare_api_token
 }
