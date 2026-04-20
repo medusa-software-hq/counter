@@ -11,7 +11,7 @@ resource "google_cloud_run_v2_service" "primary" {
   name                = module.common.gcp_counter_web_run_service_name
   location            = module.common.gcp_primary_location
   deletion_protection = false # This project is experimental
-  ingress             = "INGRESS_TRAFFIC_ALL"
+  ingress             = "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER"
   iap_enabled         = true
 
   template {
@@ -42,6 +42,34 @@ resource "google_cloud_run_v2_service" "primary" {
     percent = 100
   }
 }
+
+# Load balancing
+
+resource "google_compute_region_network_endpoint_group" "primary_service_neg" {
+  name                  = "${local.counter_web_prefix}-neg"
+  network_endpoint_type = "SERVERLESS"
+  region                = module.common.gcp_primary_location
+
+  cloud_run {
+    service = google_cloud_run_v2_service.primary.name
+  }
+}
+
+resource "google_compute_backend_service" "primary_service_compute_backend" {
+  name                  = "${local.counter_web_prefix}-primary-service-backend"
+  load_balancing_scheme = "EXTERNAL_MANAGED"
+  protocol              = "HTTPS"
+
+  backend {
+    group = google_compute_region_network_endpoint_group.primary_service_neg.id
+  }
+
+  iap {
+    enabled = true
+  }
+}
+
+# Access
 
 resource "google_iap_web_iam_member" "domain_access" {
   project = var.gcp_project_id
