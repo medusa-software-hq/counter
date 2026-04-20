@@ -1,5 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { Toaster } from 'sonner';
 import './index.css';
 import App from './App.tsx';
 import { LocalAuthProvider } from './LocalAuthProvider.tsx';
@@ -12,5 +13,6 @@ createRoot(root).render(
     <LocalAuthProvider>
       <App />
     </LocalAuthProvider>
+    <Toaster richColors position="bottom-right" />
   </StrictMode>,
 );
