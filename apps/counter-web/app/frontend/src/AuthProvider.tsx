@@ -5,6 +5,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { toast } from 'sonner';
 import { AuthContext, type AuthState, type AuthUser } from './AuthContext.tsx';
 
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string;
@@ -12,6 +13,10 @@ const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string;
 if (!CLIENT_ID) {
   throw new Error('VITE_GOOGLE_CLIENT_ID is not set');
 }
+
+const TOKEN_STORAGE_KEY = 'auth_token';
+// Minimum seconds remaining on a cached token before we consider it expired.
+const MIN_TTL_SECONDS = 60;
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -29,6 +34,32 @@ interface JwtPayload {
 function parseJwt(token: string): JwtPayload {
   const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
   return JSON.parse(atob(base64)) as JwtPayload;
+}
+
+function userFromPayload(payload: JwtPayload): AuthUser {
+  return {
+    sub: payload.sub,
+    email: payload.email,
+    name: payload.name,
+    picture: payload.picture,
+  };
+}
+
+function loadCachedToken(): { token: string; payload: JwtPayload } | null {
+  const raw = localStorage.getItem(TOKEN_STORAGE_KEY);
+  if (!raw) return null;
+  try {
+    const payload = parseJwt(raw);
+    const secondsRemaining = payload.exp - Date.now() / 1000;
+    if (secondsRemaining < MIN_TTL_SECONDS) {
+      localStorage.removeItem(TOKEN_STORAGE_KEY);
+      return null;
+    }
+    return { token: raw, payload };
+  } catch {
+    localStorage.removeItem(TOKEN_STORAGE_KEY);
+    return null;
+  }
 }
 
 function loadGisScript(): Promise<void> {
@@ -57,18 +88,33 @@ function loadGisScript(): Promise<void> {
 // ---------------------------------------------------------------------------
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<AuthState>({ status: 'loading' });
+  const [state, setState] = useState<AuthState>(() => {
+    const cached = loadCachedToken();
+    return cached !== null
+      ? {
+          status: 'authenticated',
+          token: cached.token,
+          user: userFromPayload(cached.payload),
+        }
+      : { status: 'loading' };
+  });
   const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sessionToastIdRef = useRef<string | number | null>(null);
 
   const applyToken = useCallback((token: string) => {
+    localStorage.setItem(TOKEN_STORAGE_KEY, token);
+    // Dismiss any active "session expired" banner.
+    if (sessionToastIdRef.current !== null) {
+      toast.dismiss(sessionToastIdRef.current);
+      sessionToastIdRef.current = null;
+    }
+
     const payload = parseJwt(token);
-    const user: AuthUser = {
-      sub: payload.sub,
-      email: payload.email,
-      name: payload.name,
-      picture: payload.picture,
-    };
-    setState({ status: 'authenticated', token, user });
+    setState({
+      status: 'authenticated',
+      token,
+      user: userFromPayload(payload),
+    });
 
     // Schedule silent refresh 60 s before expiry.
     const msUntilRefresh = payload.exp * 1000 - Date.now() - 60_000;
@@ -93,7 +139,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const handleUnauthorized = useCallback(() => {
     if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
+    localStorage.removeItem(TOKEN_STORAGE_KEY);
     setState({ status: 'unauthenticated' });
+    sessionToastIdRef.current = toast.error('Your session has expired.', {
+      duration: Infinity,
+      action: {
+        label: 'Sign in',
+        onClick: () => {
+          google.accounts.id.prompt();
+        },
+      },
+    });
     google.accounts.id.prompt();
   }, []);
 
@@ -124,7 +180,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
       })
       .catch(() => {
-        if (!cancelled) setState({ status: 'unauthenticated' });
+        if (!cancelled) {
+          setState((prev) =>
+            prev.status === 'loading' ? { status: 'unauthenticated' } : prev,
+          );
+        }
       });
 
     return () => {
