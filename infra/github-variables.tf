@@ -1,5 +1,14 @@
 # Actions variables consumed by CI/CD jobs
 
+data "terraform_remote_state" "counter_service_infra" {
+  backend = "gcs"
+
+  config = {
+    bucket = module.common.gcp_terraform_state_bucket_name
+    prefix = "projects/counter/v2/counter-service/foundation"
+  }
+}
+
 resource "github_actions_variable" "gcp_project_id" {
   repository    = github_repository.this.name
   variable_name = "GCP_PROJECT_ID"
@@ -40,4 +49,10 @@ resource "github_actions_variable" "gcp_ar_repo_endpoint" {
   repository    = github_repository.this.name
   variable_name = "GCP_AR_REPO_ENDPOINT"
   value         = local.gcp_ar_repo_endpoint
+}
+
+resource "github_actions_variable" "gcp_counter_service_url" {
+  repository    = github_repository.this.name
+  variable_name = "GCP_COUNTER_SERVICE_URL"
+  value         = data.terraform_remote_state.counter_service_infra.outputs.cloud_run_primary_service_url
 }

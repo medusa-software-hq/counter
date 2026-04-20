@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import reactLogo from './assets/react.svg';
 import viteLogo from './assets/vite.svg';
 import heroImg from './assets/hero.png';
@@ -6,6 +6,20 @@ import './App.css';
 
 function App() {
   const [count, setCount] = useState(0);
+  const [message, setMessage] = useState<string | null>(null);
+  const [messageError, setMessageError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch('/api')
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status.toString()}`);
+        return res.text();
+      })
+      .then(setMessage)
+      .catch((err: unknown) => {
+        setMessageError(err instanceof Error ? err.message : String(err));
+      });
+  }, []);
 
   return (
     <>
@@ -29,6 +43,12 @@ function App() {
         >
           Count is {count}
         </button>
+        {message !== null && <p className="service-message">{message}</p>}
+        {messageError !== null && (
+          <p className="service-error">
+            Failed to reach counter-service: {messageError}
+          </p>
+        )}
       </section>
 
       <div className="ticks"></div>
