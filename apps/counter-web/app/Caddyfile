@@ -1,9 +1,4 @@
 :{$PORT} {
-	handle /api* {
-		uri strip_prefix /api
-		reverse_proxy {$COUNTER_SERVICE_URL}
-	}
-
 	handle {
 		root * /srv
 		file_server
