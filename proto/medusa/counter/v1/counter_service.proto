@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package medusa.counter.v1;
+
+option java_multiple_files = true;
+option java_package = "software.medusa.counter.v1";
+
+service CounterService {
+  rpc SayHello(SayHelloRequest) returns (SayHelloResponse);
+}
+
+message SayHelloRequest {}
+
+message SayHelloResponse {
+  string message = 1;
+}
