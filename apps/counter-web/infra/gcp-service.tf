@@ -69,14 +69,6 @@ resource "google_compute_backend_service" "primary_service_compute_backend" {
   }
 }
 
-# Access
-
-resource "google_iap_web_iam_member" "domain_access" {
-  project = var.gcp_project_id
-  role    = "roles/iap.httpsResourceAccessor"
-  member  = "domain:${module.common.organization_domain}"
-}
-
 output "cloud_run_primary_service_url" {
   value = google_cloud_run_v2_service.primary.uri
 }

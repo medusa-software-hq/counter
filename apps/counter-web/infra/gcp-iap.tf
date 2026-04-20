@@ -13,3 +13,10 @@ resource "google_cloud_run_v2_service_iam_member" "run_invoker_iap" {
   role     = "roles/run.invoker"
   member   = google_project_service_identity.iap_sa.member
 }
+
+# Access
+resource "google_iap_web_iam_member" "domain_access" {
+  project = var.gcp_project_id
+  role    = "roles/iap.httpsResourceAccessor"
+  member  = "domain:${module.common.organization_domain}"
+}
