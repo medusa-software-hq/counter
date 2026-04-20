@@ -7,7 +7,8 @@ export default defineConfig({
     proxy: {
       '/api': {
         target: process.env.COUNTER_SERVICE_URL ?? 'http://localhost:8081',
-        rewrite: (path) => path.replace(/^\/api/, ''),
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, '') || '/',
       },
     },
   },

@@ -1,5 +1,5 @@
 :{$PORT} {
-	handle /api/* {
+	handle /api* {
 		uri strip_prefix /api
 		reverse_proxy {$COUNTER_SERVICE_URL}
 	}
