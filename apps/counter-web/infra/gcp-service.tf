@@ -12,7 +12,6 @@ resource "google_cloud_run_v2_service" "primary" {
   location            = module.common.gcp_primary_location
   deletion_protection = false # This project is experimental
   ingress             = "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER"
-  iap_enabled         = true
 
   template {
     service_account = google_service_account.primary_service_sa.email
@@ -62,10 +61,6 @@ resource "google_compute_backend_service" "primary_service_compute_backend" {
 
   backend {
     group = google_compute_region_network_endpoint_group.primary_service_neg.id
-  }
-
-  iap {
-    enabled = true
   }
 }
 

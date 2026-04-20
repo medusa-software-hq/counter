@@ -25,18 +25,6 @@ resource "google_compute_url_map" "primary" {
   }
 }
 
-# HTTP → HTTPS redirect URL map
-
-resource "google_compute_url_map" "http_redirect" {
-  name = "${local.counter_web_prefix}-http-redirect"
-
-  default_url_redirect {
-    https_redirect         = true
-    redirect_response_code = "MOVED_PERMANENTLY_DEFAULT"
-    strip_query            = false
-  }
-}
-
 # Load Balancer IP
 
 resource "google_compute_global_address" "alb_ip" {
@@ -57,21 +45,6 @@ resource "google_compute_global_forwarding_rule" "https" {
   target                = google_compute_target_https_proxy.primary.id
   ip_address            = google_compute_global_address.alb_ip.id
   port_range            = "443"
-}
-
-# HTTP proxy + forwarding rule (redirect only)
-
-resource "google_compute_target_http_proxy" "http_redirect" {
-  name    = "${local.counter_web_prefix}-http-proxy"
-  url_map = google_compute_url_map.http_redirect.id
-}
-
-resource "google_compute_global_forwarding_rule" "http_redirect" {
-  name                  = "${local.counter_web_prefix}-http-forwarding-rule"
-  load_balancing_scheme = "EXTERNAL_MANAGED"
-  target                = google_compute_target_http_proxy.http_redirect.id
-  ip_address            = google_compute_global_address.alb_ip.id
-  port_range            = "80"
 }
 
 # Outputs
