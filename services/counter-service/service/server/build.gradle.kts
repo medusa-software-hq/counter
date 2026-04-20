@@ -16,6 +16,7 @@ dependencies {
 
   implementation(libs.armeria.kotlin)
   implementation(libs.kotlinx.coroutines.core)
+  implementation(libs.nimbus.jose.jwt)
   runtimeOnly(libs.logback.classic)
 
   testImplementation(libs.kotlin.test)

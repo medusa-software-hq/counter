@@ -3,23 +3,34 @@ import reactLogo from './assets/react.svg';
 import viteLogo from './assets/vite.svg';
 import heroImg from './assets/hero.png';
 import './App.css';
+import { useAuth } from './useAuth.tsx';
+import { SignInWall } from './SignInWall.tsx';
 
-function App() {
+function AppContent({ token }: { token: string }) {
+  const { handleUnauthorized } = useAuth();
   const [count, setCount] = useState(0);
   const [message, setMessage] = useState<string | null>(null);
   const [messageError, setMessageError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch('/api')
+    fetch('/api', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
       .then((res) => {
+        if (res.status === 401) {
+          handleUnauthorized();
+          return null;
+        }
         if (!res.ok) throw new Error(`HTTP ${res.status.toString()}`);
         return res.text();
       })
-      .then(setMessage)
+      .then((text) => {
+        if (text !== null) setMessage(text);
+      })
       .catch((err: unknown) => {
         setMessageError(err instanceof Error ? err.message : String(err));
       });
-  }, []);
+  }, [token, handleUnauthorized]);
 
   return (
     <>
@@ -138,6 +149,14 @@ function App() {
       <section id="spacer"></section>
     </>
   );
+}
+
+function App() {
+  const { state } = useAuth();
+
+  if (state.status === 'loading') return null;
+  if (state.status === 'unauthenticated') return <SignInWall />;
+  return <AppContent token={state.token} />;
 }
 
 export default App;

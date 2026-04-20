@@ -34,7 +34,7 @@ tasks:
     interactive: true
 
   run:
-    desc: Run the service locally
+    desc: Run the service locally (set GOOGLE_CLIENT_ID and GOOGLE_ALLOWED_DOMAIN)
     env:
       PORT: '8081'
     cmds:

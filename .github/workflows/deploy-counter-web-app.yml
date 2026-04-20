@@ -50,6 +50,9 @@ jobs:
           context: ${{ env.APP_PATH }}
           push: true
           tags: ${{ env.IMAGE_REF }}
+          build-args: |
+            VITE_GOOGLE_CLIENT_ID=${{ vars.GOOGLE_CLIENT_ID }}
+            VITE_GOOGLE_HD=${{ vars.GOOGLE_ALLOWED_DOMAIN }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

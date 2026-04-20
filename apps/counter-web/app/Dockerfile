@@ -6,6 +6,12 @@ COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 
 COPY frontend/ .
+
+ARG VITE_GOOGLE_CLIENT_ID
+ARG VITE_GOOGLE_HD
+ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
+ENV VITE_GOOGLE_HD=$VITE_GOOGLE_HD
+
 RUN npx vite build
 
 # Final Runtime

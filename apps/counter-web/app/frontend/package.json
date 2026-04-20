@@ -12,6 +12,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
+    "@types/google.accounts": "^0.0.18",
     "@types/node": "^24.12.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
