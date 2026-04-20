@@ -78,12 +78,12 @@ resource "github_repository_ruleset" "default_branch" {
       }
 
       required_check {
-        context        = "${local.check_counter_web_app_job_name} / Build backend"
+        context        = "${local.check_counter_web_app_job_name} / Build frontend"
         integration_id = local.gh_actions_integration_id
       }
 
       required_check {
-        context        = "${local.check_counter_web_app_job_name} / Build frontend"
+        context        = "${local.check_counter_web_app_job_name} / Check Caddyfile"
         integration_id = local.gh_actions_integration_id
       }
 
