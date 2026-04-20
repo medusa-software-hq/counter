@@ -32,3 +32,11 @@ tasks:
     cmds:
       - ./gradlew compileKotlin
     interactive: true
+
+  run:
+    desc: Run the service locally
+    env:
+      PORT: '8081'
+    cmds:
+      - ./gradlew :server:run
+    interactive: true

@@ -78,3 +78,9 @@ tasks:
       - counter-web:app:analyze
       - counter-web:infra:validate
       - counter-service:infra:validate
+
+  run:
+    desc: Run the frontend and counter-service locally
+    deps:
+      - counter-web:app:run
+      - counter-service:service:run

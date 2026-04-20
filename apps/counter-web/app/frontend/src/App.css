@@ -17,6 +17,16 @@
   }
 }
 
+.service-message {
+  font-size: 16px;
+  color: var(--text);
+}
+
+.service-error {
+  font-size: 14px;
+  color: #e53e3e;
+}
+
 .hero {
   position: relative;
 
