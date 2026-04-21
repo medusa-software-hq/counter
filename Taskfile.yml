@@ -1,27 +1,25 @@
 version: '3'
 
-# 🎨 TEMPLATE EJECT: Update all paths and identifiers
-
 includes:
   infra:
     taskfile: infra/Taskfile.yml
     dir: infra
 
-  counter-web:app:
-    taskfile: apps/counter-web/app/Taskfile.yml
-    dir: apps/counter-web/app
+  web:app:
+    taskfile: apps/web/spa/Taskfile.yml
+    dir: apps/web/spa
 
-  counter-web:infra:
-    taskfile: apps/counter-web/infra/Taskfile.yml
-    dir: apps/counter-web/infra
+  web:infra:
+    taskfile: apps/web/infra/Taskfile.yml
+    dir: apps/web/infra
 
-  counter-service:service:
-    taskfile: services/counter-service/service/Taskfile.yml
-    dir: services/counter-service/service
+  core-service:impl:
+    taskfile: services/core-service/impl/Taskfile.yml
+    dir: services/core-service/impl
 
-  counter-service:infra:
-    taskfile: services/counter-service/infra/Taskfile.yml
-    dir: services/counter-service/infra
+  core-service:infra:
+    taskfile: services/core-service/infra/Taskfile.yml
+    dir: services/core-service/infra
 
 tasks:
   github-ci:lint:
@@ -48,41 +46,41 @@ tasks:
     deps:
       - github-ci:lint
       - infra:checkFormatting
-      - counter-web:app:checkFormatting
-      - counter-web:infra:checkFormatting
-      - counter-service:service:checkFormatting
-      - counter-service:infra:checkFormatting
+      - web:app:checkFormatting
+      - web:infra:checkFormatting
+      - core-service:impl:checkFormatting
+      - core-service:infra:checkFormatting
 
   fixFormatting-all:
     desc: Fix formatting for the entire codebase
     deps:
       - github-ci:fixLint
       - infra:fixFormatting
-      - counter-web:app:fixFormatting
-      - counter-web:infra:fixFormatting
-      - counter-service:service:fixFormatting
-      - counter-service:infra:fixFormatting
+      - web:app:fixFormatting
+      - web:infra:fixFormatting
+      - core-service:impl:fixFormatting
+      - core-service:infra:fixFormatting
 
   lint-all:
     desc: Lint the entire codebase
     deps:
       - github-ci:lint
       - infra:lint
-      - counter-web:app:lint
-      - counter-web:infra:lint
-      - counter-service:service:lint
-      - counter-service:infra:lint
+      - web:app:lint
+      - web:infra:lint
+      - core-service:impl:lint
+      - core-service:infra:lint
 
   analyze-all:
     desc: Analyze the entire codebase
     deps:
       - infra:validate
-      - counter-web:app:analyze
-      - counter-web:infra:validate
-      - counter-service:infra:validate
+      - web:app:analyze
+      - web:infra:validate
+      - core-service:infra:validate
 
   run:
-    desc: Run the frontend and counter-service locally
+    desc: Run the frontend and core service locally
     deps:
-      - counter-web:app:run
-      - counter-service:service:run
+      - web:app:run
+      - core-service:impl:run
