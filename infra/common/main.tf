@@ -10,17 +10,18 @@ locals {
   gcp_meta_project_id             = "ms-meta-9aaf29f0"
   gcp_terraform_state_bucket_name = "ms-tfstate-c1984596bdabf023"
 
-  gcp_counter_service_run_service_name = "counter-service"
-  gcp_counter_web_run_service_name     = "counter-web"
+  gcp_core_service_run_service_name = "counter-service"
+  gcp_web_run_service_name          = "counter-web"
 
   gh_organization_name = "medusa-software-hq"
-  gh_repo_name         = "counter"
+  gh_repo_name         = "counter" # 🎨 TEMPLATE EJECT: Change the repo name
 
-  project_base_name = "counter"
-  project_variant   = "v2"
+  project_base_name = "counter" # 🎨 TEMPLATE EJECT: Choose an org-unique project base name
+  project_variant   = "v2"      # 🎨 TEMPLATE EJECT: Choose a project-unique variant name
 
-  # Google OAuth 2.0 client ID for the counter-web app.
+  # Google OAuth 2.0 client ID
   # https://console.cloud.google.com/auth/clients/852264381191-crah9udgr1d44tposdv348k091t2upb6.apps.googleusercontent.com?project=ms-auth-284371d2
+  # 🎨 TEMPLATE POST-EJECT: Create a new OAuth Client ID manually and change it here
   google_client_id = "852264381191-crah9udgr1d44tposdv348k091t2upb6.apps.googleusercontent.com"
 }
 
@@ -44,12 +45,12 @@ output "gcp_terraform_state_bucket_name" {
   value = local.gcp_terraform_state_bucket_name
 }
 
-output "gcp_counter_service_run_service_name" {
-  value = local.gcp_counter_service_run_service_name
+output "gcp_core_service_run_service_name" {
+  value = local.gcp_core_service_run_service_name
 }
 
-output "gcp_counter_web_run_service_name" {
-  value = local.gcp_counter_web_run_service_name
+output "gcp_web_run_service_name" {
+  value = local.gcp_web_run_service_name
 }
 
 output "gh_organization_name" {

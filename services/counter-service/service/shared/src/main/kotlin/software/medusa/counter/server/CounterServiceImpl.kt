@@ -8,6 +8,7 @@ import software.medusa.counter.v1.GetCountResponse
 import software.medusa.counter.v1.IncrementRequest
 import software.medusa.counter.v1.IncrementResponse
 
+// 🎨 TEMPLATE EJECT: Update the class name (this will be forced by Protobuf)
 class CounterServiceImpl(
     private val counterStore: CounterStore,
 ) : CounterServiceGrpcKt.CounterServiceCoroutineImplBase() {

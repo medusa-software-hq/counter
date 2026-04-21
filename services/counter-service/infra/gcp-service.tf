@@ -1,14 +1,14 @@
 # Dedicated service account for the Cloud Run service.
 resource "google_service_account" "primary_service_sa" {
   project      = var.gcp_project_id
-  account_id   = "${module.common.gcp_counter_service_run_service_name}-sa"
+  account_id   = "${module.common.gcp_core_service_run_service_name}-sa"
   display_name = "Cloud Run Service Account"
 }
 
 # The primary Cloud Run service for the app
 resource "google_cloud_run_v2_service" "primary" {
   project             = var.gcp_project_id
-  name                = module.common.gcp_counter_service_run_service_name
+  name                = module.common.gcp_core_service_run_service_name
   location            = module.common.gcp_primary_location
   deletion_protection = false # This project is experimental
   ingress             = "INGRESS_TRAFFIC_ALL"
