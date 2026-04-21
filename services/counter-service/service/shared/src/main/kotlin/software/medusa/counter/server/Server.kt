@@ -8,7 +8,12 @@ import com.linecorp.armeria.server.cors.CorsService
 import com.linecorp.armeria.server.grpc.GrpcService
 import com.linecorp.armeria.server.healthcheck.HealthCheckService
 
-fun buildServer(originRegex: String, port: Int, auth: DecoratingHttpServiceFunction): Server {
+fun buildServer(
+    originRegex: String,
+    port: Int,
+    auth: DecoratingHttpServiceFunction,
+    counterStore: CounterStore,
+): Server {
   val cors =
       CorsService.builderForOriginRegex(originRegex)
           .apply {
@@ -33,7 +38,7 @@ fun buildServer(originRegex: String, port: Int, auth: DecoratingHttpServiceFunct
   val grpcService =
       GrpcService.builder()
           .apply {
-            addService(CounterServiceImpl())
+            addService(CounterServiceImpl(counterStore))
             enableUnframedRequests(true)
           }
           .build()

@@ -8,15 +8,19 @@ import software.medusa.counter.v1.GetCountResponse
 import software.medusa.counter.v1.IncrementRequest
 import software.medusa.counter.v1.IncrementResponse
 
-class CounterServiceImpl : CounterServiceGrpcKt.CounterServiceCoroutineImplBase() {
-  private var counter = 0
-
+class CounterServiceImpl(
+    private val counterStore: CounterStore,
+) : CounterServiceGrpcKt.CounterServiceCoroutineImplBase() {
   override suspend fun getCount(request: GetCountRequest): GetCountResponse =
-      GetCountResponse.newBuilder().setCount(counter).build()
+      GetCountResponse.newBuilder().setCount(counterStore.getCount(mainCounterId)).build()
 
   override suspend fun increment(request: IncrementRequest): IncrementResponse =
-      IncrementResponse.newBuilder().setCount(++counter).build()
+      IncrementResponse.newBuilder()
+          .setCount(counterStore.incrementAndGetCount(mainCounterId))
+          .build()
 
   override suspend fun decrement(request: DecrementRequest): DecrementResponse =
-      DecrementResponse.newBuilder().setCount(--counter).build()
+      DecrementResponse.newBuilder()
+          .setCount(counterStore.decrementAndGetCount(mainCounterId))
+          .build()
 }

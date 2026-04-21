@@ -16,6 +16,7 @@ dependencies {
   api(libs.armeria.grpc)
   api(libs.armeria.grpc.kotlin)
   api(libs.armeria.kotlin)
+  api(libs.google.cloud.firestore)
   api(libs.grpc.kotlin.stub)
   api(libs.grpc.protobuf)
   api(libs.grpc.stub)

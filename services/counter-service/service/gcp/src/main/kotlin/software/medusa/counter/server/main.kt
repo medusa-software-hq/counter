@@ -26,6 +26,7 @@ fun main() {
           originRegex = corsOriginRegex,
           port = port,
           auth = GoogleIdTokenAuthDecorator(clientId, allowedDomain),
+          counterStore = FirestoreCounterStore.build(),
       )
       .start()
       .join()
