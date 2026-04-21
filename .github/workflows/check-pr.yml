@@ -15,9 +15,9 @@ jobs:
     name: infra
     uses: ./.github/workflows/check-infra.yml
 
-  check-counter-web-infra:
-    name: counter-web (infra)
-    uses: ./.github/workflows/check-counter-web-infra.yml
+  check-web-infra:
+    name: web (infra)
+    uses: ./.github/workflows/check-web-infra.yml
     secrets: inherit
 
     permissions:
@@ -25,20 +25,20 @@ jobs:
       id-token: write
       pull-requests: write
 
-  check-counter-web-app:
-    name: counter-web (app)
-    uses: ./.github/workflows/check-counter-web-app.yml
+  check-web-spa:
+    name: web (SPA)
+    uses: ./.github/workflows/check-web-spa.yml
 
-  check-counter-service-service:
-    name: counter-service (service)
-    uses: ./.github/workflows/check-counter-service-service.yml
-
-  check-counter-service-infra:
-    name: counter-service (infra)
-    uses: ./.github/workflows/check-counter-service-infra.yml
+  check-core-service-infra:
+    name: core service (infra)
+    uses: ./.github/workflows/check-core-service-infra.yml
     secrets: inherit
 
     permissions:
       contents: read
       id-token: write
       pull-requests: write
+
+  check-core-service-impl:
+    name: core service (implementation)
+    uses: ./.github/workflows/check-core-service-impl.yml
