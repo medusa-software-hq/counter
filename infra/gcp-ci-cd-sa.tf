@@ -92,6 +92,20 @@ resource "google_project_iam_member" "cicd_sa_sa_user" {
   member  = "serviceAccount:${google_service_account.cicd_sa.email}"
 }
 
+# Grant CI/CD SA Firestore admin (create Firestore database)
+resource "google_project_iam_member" "cicd_sa_datastore_admin" {
+  project = local.gcp_project_id
+  role    = "roles/datastore.owner"
+  member  = "serviceAccount:${google_service_account.cicd_sa.email}"
+}
+
+# Grant CI/CD SA project IAM admin (manage project-level IAM bindings)
+resource "google_project_iam_member" "cicd_sa_project_iam_admin" {
+  project = local.gcp_project_id
+  role    = "roles/resourcemanager.projectIamAdmin"
+  member  = "serviceAccount:${google_service_account.cicd_sa.email}"
+}
+
 # Allow the CI/CD SA to push images to Artifact Registry.
 resource "google_artifact_registry_repository_iam_member" "registry_ci_writer" {
   project    = google_project.gcp_project.project_id
