@@ -62,7 +62,7 @@ tasks:
     desc: Start dev server
     deps: [install, proto]
     env:
-      VITE_COUNTER_SERVICE_URL: http://localhost:8081
+      VITE_CORE_SERVICE_URL: http://localhost:8081
     cmds:
       - npx vite
     interactive: true

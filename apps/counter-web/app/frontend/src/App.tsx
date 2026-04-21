@@ -9,14 +9,14 @@ import './App.css';
 import { useAuth } from './useAuth.tsx';
 import { SignInWall } from './SignInWall.tsx';
 
-const COUNTER_SERVICE_URL = import.meta.env.VITE_COUNTER_SERVICE_URL as string;
+const CORE_SERVICE_URL = import.meta.env.VITE_CORE_SERVICE_URL as string;
 
-if (!COUNTER_SERVICE_URL) {
-  throw new Error('VITE_COUNTER_SERVICE_URL is not set');
+if (!CORE_SERVICE_URL) {
+  throw new Error('VITE_CORE_SERVICE_URL is not set');
 }
 
 const transport = createGrpcWebTransport({
-  baseUrl: COUNTER_SERVICE_URL,
+  baseUrl: CORE_SERVICE_URL,
 });
 
 const client = createClient(CounterService, transport);
