@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createClient } from '@connectrpc/connect';
 import { createGrpcWebTransport } from '@connectrpc/connect-web';
 import { CounterService } from './gen/medusa/counter/v1/counter_service_pb.ts';
@@ -23,29 +23,35 @@ const client = createClient(CounterService, transport);
 
 function AppContent({ token }: { token: string }) {
   const { handleUnauthorized } = useAuth();
-  const [message, setMessage] = useState<string | null>(null);
-  const [messageError, setMessageError] = useState<string | null>(null);
+  const [count, setCount] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const headers = useMemo(
+    () => ({ Authorization: `Bearer ${token}` }),
+    [token],
+  );
+
+  const handleError = useCallback(
+    (err: unknown) => {
+      const message = err instanceof Error ? err.message : String(err);
+      if (message.includes('401') || message.includes('unauthenticated')) {
+        handleUnauthorized();
+      } else {
+        setError(message);
+      }
+    },
+    [handleUnauthorized],
+  );
 
   useEffect(() => {
     let cancelled = false;
 
     async function load() {
       try {
-        const response = await client.sayHello(
-          {},
-          { headers: { Authorization: `Bearer ${token}` } },
-        );
-        if (!cancelled) setMessage(response.message);
+        const response = await client.getCount({}, { headers });
+        if (!cancelled) setCount(response.count);
       } catch (err: unknown) {
-        if (!cancelled) {
-          const message = err instanceof Error ? err.message : String(err);
-          if (message.includes('401') || message.includes('unauthenticated')) {
-            handleUnauthorized();
-          } else {
-            setMessageError(message);
-          }
-        }
-        console.error('sayHello failed:', err);
+        if (!cancelled) handleError(err);
       }
     }
 
@@ -53,7 +59,27 @@ function AppContent({ token }: { token: string }) {
     return () => {
       cancelled = true;
     };
-  }, [token, handleUnauthorized]);
+  }, [headers, handleError]);
+
+  async function increment() {
+    try {
+      const response = await client.increment({}, { headers });
+      setCount(response.count);
+      setError(null);
+    } catch (err: unknown) {
+      handleError(err);
+    }
+  }
+
+  async function decrement() {
+    try {
+      const response = await client.decrement({}, { headers });
+      setCount(response.count);
+      setError(null);
+    } catch (err: unknown) {
+      handleError(err);
+    }
+  }
 
   return (
     <>
@@ -64,15 +90,21 @@ function AppContent({ token }: { token: string }) {
           <img src={viteLogo} className="vite" alt="Vite logo" />
         </div>
         <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
+          <h1>{count ?? '…'}</h1>
+          <div
+            style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}
+          >
+            <button className="counter" onClick={() => void decrement()}>
+              −
+            </button>
+            <button className="counter" onClick={() => void increment()}>
+              +
+            </button>
+          </div>
         </div>
-        {message !== null && <p className="service-message">{message}</p>}
-        {messageError !== null && (
+        {error !== null && (
           <p className="service-error">
-            Failed to reach counter-service: {messageError}
+            Failed to reach counter-service: {error}
           </p>
         )}
       </section>

@@ -3,3 +3,6 @@ build/
 
 # Task cache
 .task/
+
+# Kotlin compiler cache
+.kotlin/

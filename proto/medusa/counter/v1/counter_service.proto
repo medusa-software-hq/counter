@@ -6,11 +6,25 @@ option java_multiple_files = true;
 option java_package = "software.medusa.counter.v1";
 
 service CounterService {
-  rpc SayHello(SayHelloRequest) returns (SayHelloResponse);
+  rpc GetCount(GetCountRequest) returns (GetCountResponse);
+  rpc Increment(IncrementRequest) returns (IncrementResponse);
+  rpc Decrement(DecrementRequest) returns (DecrementResponse);
 }
 
-message SayHelloRequest {}
+message GetCountRequest {}
 
-message SayHelloResponse {
-  string message = 1;
+message GetCountResponse {
+  int32 count = 1;
+}
+
+message IncrementRequest {}
+
+message IncrementResponse {
+  int32 count = 1;
+}
+
+message DecrementRequest {}
+
+message DecrementResponse {
+  int32 count = 1;
 }
