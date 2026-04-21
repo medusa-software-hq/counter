@@ -14,6 +14,15 @@ tasks:
       # Using `npm ci` ensures a clean install based on the lockfile
       - npm ci
 
+  proto:
+    desc: Generate code from protobuf definitions
+    sources:
+      - ../../../../proto/**/*.proto
+    generates:
+      - src/gen/**/*.ts
+    cmds:
+      - buf generate
+
   checkFormatting:
     desc: Check package formatting
     deps: [install]
@@ -28,25 +37,30 @@ tasks:
 
   lint:
     desc: Lint the package
-    deps: [install]
+    deps: [install, proto]
     cmds:
       - npx eslint .
 
   typecheck:
     desc: Type check the package
-    deps: [install]
+    deps: [install, proto]
     cmds:
       - npx tsc --noEmit
 
+  clean:
+    desc: Remove generated and build artifacts
+    cmds:
+      - rm -rf dist src/gen
+
   build:
     desc: Build the package
-    deps: [install, typecheck]
+    deps: [install, typecheck, proto]
     cmds:
       - npx vite build
 
   dev:
     desc: Start dev server
-    deps: [install]
+    deps: [install, proto]
     env:
       VITE_COUNTER_SERVICE_URL: http://localhost:8081
     cmds:

@@ -1,4 +1,7 @@
 import { useEffect, useState } from 'react';
+import { createClient } from '@connectrpc/connect';
+import { createGrpcWebTransport } from '@connectrpc/connect-web';
+import { CounterService } from './gen/medusa/counter/v1/counter_service_pb.ts';
 import reactLogo from './assets/react.svg';
 import viteLogo from './assets/vite.svg';
 import heroImg from './assets/hero.png';
@@ -12,30 +15,44 @@ if (!COUNTER_SERVICE_URL) {
   throw new Error('VITE_COUNTER_SERVICE_URL is not set');
 }
 
+const transport = createGrpcWebTransport({
+  baseUrl: COUNTER_SERVICE_URL,
+});
+
+const client = createClient(CounterService, transport);
+
 function AppContent({ token }: { token: string }) {
   const { handleUnauthorized } = useAuth();
-  const [count, setCount] = useState(0);
   const [message, setMessage] = useState<string | null>(null);
   const [messageError, setMessageError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch(COUNTER_SERVICE_URL, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => {
-        if (res.status === 401) {
-          handleUnauthorized();
-          return null;
+    let cancelled = false;
+
+    async function load() {
+      try {
+        const response = await client.sayHello(
+          {},
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
+        if (!cancelled) setMessage(response.message);
+      } catch (err: unknown) {
+        if (!cancelled) {
+          const message = err instanceof Error ? err.message : String(err);
+          if (message.includes('401') || message.includes('unauthenticated')) {
+            handleUnauthorized();
+          } else {
+            setMessageError(message);
+          }
         }
-        if (!res.ok) throw new Error(`HTTP ${res.status.toString()}`);
-        return res.text();
-      })
-      .then((text) => {
-        if (text !== null) setMessage(text);
-      })
-      .catch((err: unknown) => {
-        setMessageError(err instanceof Error ? err.message : String(err));
-      });
+        console.error('sayHello failed:', err);
+      }
+    }
+
+    void load();
+    return () => {
+      cancelled = true;
+    };
   }, [token, handleUnauthorized]);
 
   return (
@@ -52,14 +69,6 @@ function AppContent({ token }: { token: string }) {
             Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
           </p>
         </div>
-        <button
-          className="counter"
-          onClick={() => {
-            setCount((count) => count + 1);
-          }}
-        >
-          Count is {count}
-        </button>
         {message !== null && <p className="service-message">{message}</p>}
         {messageError !== null && (
           <p className="service-error">

@@ -28,6 +28,10 @@ jobs:
           cache: npm
           cache-dependency-path: ${{ env.FRONTEND_PATH }}/package-lock.json
 
+      - uses: bufbuild/buf-action@v1.4.0
+        with:
+          setup_only: true
+
       - uses: go-task/setup-task@v2
 
       - name: Check formatting and lint
@@ -73,6 +77,8 @@ jobs:
         uses: docker/build-push-action@v7.1.0
         with:
           context: ${{ env.APP_PATH }}
+          build-contexts: |
+            proto=proto
           push: false
           cache-from: type=gha
           cache-to: type=gha,mode=max

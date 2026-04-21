@@ -5,6 +5,7 @@ on:
     branches: ["trunk/*"]
     paths:
       - "apps/counter-web/app/**"
+      - "proto/**"
 
   workflow_dispatch:
 
@@ -48,6 +49,8 @@ jobs:
         uses: docker/build-push-action@v7.1.0
         with:
           context: ${{ env.APP_PATH }}
+          build-contexts: |
+            proto=proto
           push: true
           tags: ${{ env.IMAGE_REF }}
           build-args: |
