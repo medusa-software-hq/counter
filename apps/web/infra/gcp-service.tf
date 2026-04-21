@@ -57,10 +57,14 @@ resource "google_compute_region_network_endpoint_group" "primary_service_neg" {
 resource "google_compute_backend_service" "primary_service_compute_backend" {
   name                  = "primary-service-compute-backend"
   load_balancing_scheme = "EXTERNAL_MANAGED"
-  protocol              = "HTTPS"
+  protocol              = "HTTP"
 
   backend {
     group = google_compute_region_network_endpoint_group.primary_service_neg.id
+  }
+
+  iap {
+    enabled               = true
   }
 }
 
