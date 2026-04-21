@@ -39,13 +39,3 @@ provider "google" {
   region  = module.common.gcp_primary_location
 }
 
-# Secondary Google provider
-provider "google" {
-  alias   = "orgpolicy"
-  project = module.common.gcp_meta_project_id
-  region  = module.common.gcp_primary_location
-
-  # Allow overriding the project for organization policy resources
-  user_project_override = true
-  billing_project       = var.gcp_project_id
-}

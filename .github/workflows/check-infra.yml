@@ -27,6 +27,12 @@ jobs:
         with:
           terraform_version: ~> ${{ env.TERRAFORM_VERSION }}
 
+      - uses: terraform-linters/setup-tflint@v6.2.2
+
       - name: Check formatting
         working-directory: infra
         run: terraform fmt -check -recursive
+
+      - name: Lint Terraform configuration
+        working-directory: infra
+        run: tflint --recursive
