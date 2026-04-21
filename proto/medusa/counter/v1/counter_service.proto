@@ -1,10 +1,14 @@
 syntax = "proto3";
 
+// 🎨 TEMPLATE EJECT: Change the Protobuf package
 package medusa.counter.v1;
 
 option java_multiple_files = true;
+
+// 🎨 TEMPLATE EJECT: Update this Java package reference
 option java_package = "software.medusa.counter.v1";
 
+// 🎨 TEMPLATE EJECT: Change the service name
 service CounterService {
   rpc GetCount(GetCountRequest) returns (GetCountResponse);
   rpc Increment(IncrementRequest) returns (IncrementResponse);

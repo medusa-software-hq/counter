@@ -1,5 +1,7 @@
 version: '3'
 
+# 🎨 TEMPLATE EJECT: Update all paths and identifiers
+
 includes:
   infra:
     taskfile: infra/Taskfile.yml

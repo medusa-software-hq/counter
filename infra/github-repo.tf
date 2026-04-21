@@ -6,6 +6,9 @@ resource "github_repository" "this" {
   description = "Variant: ${module.common.project_variant}"
   visibility  = "private"
 
+  // 🎨 TEMPLATE EJECT: Make this false
+  is_template = true
+
   has_discussions = false
   has_issues      = false
   has_projects    = false
@@ -21,7 +24,7 @@ resource "github_repository" "this" {
 }
 
 # If the repo was created first, it has to be imported:
-# terraform import github_repository.app_repo $GH_REPO_NAME
+# terraform import github_repository.this $GH_REPO_NAME
 
 locals {
   # GitHub Actions integration ID (discovered manually)
