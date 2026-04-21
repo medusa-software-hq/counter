@@ -54,7 +54,8 @@ jobs:
         run: |
           ./gradlew :server:jib \
             -Pjib.imageRef=${{ env.IMAGE_REF }} \
-            -Pjib.imageTag=${{ github.sha }}
+            -Pjib.imageTag=${{ github.sha }} \
+            --stacktrace --info
 
       - name: Deploy to Cloud Run
         run: |
