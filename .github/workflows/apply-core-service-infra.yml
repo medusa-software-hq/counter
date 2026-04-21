@@ -1,10 +1,10 @@
-name: Apply counter-service infra
+name: Apply core service infra
 
 on:
   push:
     branches: ["trunk/*"]
     paths:
-      - "services/counter-service/infra/**"
+      - "services/core-service/infra/**"
 
   workflow_dispatch:
 
@@ -43,7 +43,7 @@ jobs:
           terraform_version: ~> ${{ env.TERRAFORM_VERSION }}
 
       - name: Apply Terraform configuration
-        working-directory: services/counter-service/infra
+        working-directory: services/core-service/infra
         env:
           TF_VAR_gcp_project_id: ${{ vars.GCP_PROJECT_ID }}
         run: |

@@ -5,7 +5,7 @@ data "terraform_remote_state" "core_service_infra" {
 
   config = {
     bucket = module.common.gcp_terraform_state_bucket_name
-    prefix = "projects/counter/v2/counter-service/foundation"
+    prefix = "projects/counter/v2/counter-service/foundation" # 🎨 TEMPLATE EJECT: Update the prefix (!)
   }
 }
 
@@ -57,7 +57,7 @@ resource "github_actions_variable" "gcp_core_service_url" {
   value         = data.terraform_remote_state.core_service_infra.outputs.cloud_run_primary_service_url
 }
 
-# Consumed by the counter-web frontend build (baked into the JS bundle).
+# Consumed by the web frontend build (baked into the JS bundle).
 resource "github_actions_variable" "google_client_id" {
   repository    = github_repository.this.name
   variable_name = "GOOGLE_CLIENT_ID"

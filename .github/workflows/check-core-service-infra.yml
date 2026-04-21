@@ -1,4 +1,4 @@
-name: Check counter-service infra
+name: Check core service infra
 
 on:
   workflow_call:
@@ -40,18 +40,18 @@ jobs:
           terraform_version: ~> ${{ env.TERRAFORM_VERSION }}
 
       - name: Check formatting
-        working-directory: services/counter-service/infra
+        working-directory: services/core-service/infra
         run: terraform fmt -check -recursive
 
       - name: Plan Terraform application
-        working-directory: services/counter-service/infra
+        working-directory: services/core-service/infra
         env:
           TF_VAR_gcp_project_id: ${{ vars.GCP_PROJECT_ID }}
         run: |
           terraform init
           terraform plan | tee terraform-plan.txt
           {
-            echo '## Terraform plan (counter-service)'
+            echo '## Terraform plan'
             echo ''
             echo '```'
             cat terraform-plan.txt
