@@ -5,7 +5,7 @@ terraform {
 
   backend "gcs" {
     bucket = "ms-tfstate-c1984596bdabf023"
-    prefix = "projects/counter/v3/root" # 🎨 TEMPLATE EJECT: Update the prefix (!)
+    prefix = "projects/counter/v3/services/core-service/foundation" # 🎨 TEMPLATE EJECT: Update the prefix (!)
   }
 
   required_providers {
@@ -17,20 +17,21 @@ terraform {
       source  = "hashicorp/random"
       version = "~> 3.8"
     }
-    github = {
-      source  = "integrations/github"
-      version = "~> 6.11"
-    }
   }
 }
 
 # Module imports
 
 module "common" {
-  source = "./common"
+  source = "../../../infra/common"
 }
 
 # Providers
+
+variable "gcp_project_id" {
+  description = "GCP project ID."
+  type        = string
+}
 
 # Primary Google provider
 provider "google" {
@@ -46,18 +47,5 @@ provider "google" {
 
   # Allow overriding the project for organization policy resources
   user_project_override = true
-  billing_project       = local.gcp_project_id
-}
-
-# GitHub provider for accessing CI/CD variables
-
-variable "gh_token" {
-  description = "Organization-owned GitHub token."
-  type        = string
-  sensitive   = true
-}
-
-provider "github" {
-  owner = module.common.gh_organization_name
-  token = var.gh_token
+  billing_project       = var.gcp_project_id
 }
