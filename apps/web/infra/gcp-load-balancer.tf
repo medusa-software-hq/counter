@@ -53,3 +53,20 @@ output "load_balancer_ip" {
   description = "Static IP address of the Application Load Balancer."
   value       = google_compute_global_address.alb_ip.address
 }
+
+# Imports
+
+import {
+  to = google_compute_managed_ssl_certificate.primary
+  id = "projects/ms-counter-1c326d3a/global/sslCertificates/web-cert"
+}
+
+import {
+  to = google_compute_global_address.alb_ip
+  id = "projects/ms-counter-1c326d3a/global/addresses/primary-alb-ip"
+}
+
+import {
+  to = google_compute_region_network_endpoint_group.primary_service_neg
+  id = "projects/ms-counter-1c326d3a/regions/europe-west1/networkEndpointGroups/primary-neg"
+}
