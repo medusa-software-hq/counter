@@ -1,14 +1,5 @@
 # Actions variables consumed by CI/CD jobs
 
-data "terraform_remote_state" "core_service_infra" {
-  backend = "gcs"
-
-  config = {
-    bucket = module.common.gcp_terraform_state_bucket_name
-    prefix = "projects/counter/v2/counter-service/foundation" # 🎨 TEMPLATE EJECT: Update the prefix (!)
-  }
-}
-
 resource "github_actions_variable" "gcp_project_id" {
   repository    = github_repository.this.name
   variable_name = "GCP_PROJECT_ID"
@@ -54,7 +45,14 @@ resource "github_actions_variable" "gcp_ar_repo_endpoint" {
 resource "github_actions_variable" "gcp_core_service_url" {
   repository    = github_repository.this.name
   variable_name = module.common.gh_core_service_url_var_name
-  value         = data.terraform_remote_state.core_service_infra.outputs.cloud_run_primary_service_url
+
+  # Managed manually (for now):
+  # https://github.com/organizations/medusa-software-hq/settings/variables/actions/CORE_SERVICE_URL
+  value = "https://example.com"
+
+  lifecycle {
+    ignore_changes = [value]
+  }
 }
 
 # Consumed by the web frontend build (baked into the JS bundle).
