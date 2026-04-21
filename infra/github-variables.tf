@@ -1,6 +1,6 @@
 # Actions variables consumed by CI/CD jobs
 
-data "terraform_remote_state" "counter_service_infra" {
+data "terraform_remote_state" "core_service_infra" {
   backend = "gcs"
 
   config = {
@@ -21,15 +21,15 @@ resource "github_actions_variable" "gcp_primary_location" {
   value         = module.common.gcp_primary_location
 }
 
-resource "github_actions_variable" "gcp_counter_service_run_service_name" {
+resource "github_actions_variable" "gcp_core_service_run_service_name" {
   repository    = github_repository.this.name
-  variable_name = "GCP_COUNTER_SERVICE_RUN_SERVICE_NAME"
+  variable_name = "GCP_CORE_SERVICE_RUN_SERVICE_NAME"
   value         = module.common.gcp_core_service_run_service_name
 }
 
-resource "github_actions_variable" "gcp_counter_web_service_name" {
+resource "github_actions_variable" "gcp_web_run_service_name" {
   repository    = github_repository.this.name
-  variable_name = "GCP_COUNTER_WEB_RUN_SERVICE_NAME"
+  variable_name = "GCP_WEB_RUN_SERVICE_NAME"
   value         = module.common.gcp_web_run_service_name
 }
 
@@ -51,10 +51,10 @@ resource "github_actions_variable" "gcp_ar_repo_endpoint" {
   value         = local.gcp_ar_repo_endpoint
 }
 
-resource "github_actions_variable" "gcp_counter_service_url" {
+resource "github_actions_variable" "gcp_core_service_url" {
   repository    = github_repository.this.name
-  variable_name = "GCP_COUNTER_SERVICE_URL"
-  value         = data.terraform_remote_state.counter_service_infra.outputs.cloud_run_primary_service_url
+  variable_name = module.common.gh_core_service_url_var_name
+  value         = data.terraform_remote_state.core_service_infra.outputs.cloud_run_primary_service_url
 }
 
 # Consumed by the counter-web frontend build (baked into the JS bundle).
