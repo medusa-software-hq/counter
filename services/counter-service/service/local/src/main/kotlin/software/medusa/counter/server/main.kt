@@ -8,6 +8,7 @@ fun main() {
           originRegex = localCorsOriginRegex,
           port = localPort,
           auth = NoOpAuthDecorator,
+          counterStore = InMemoryCounterStore(),
       )
       .start()
       .join()
