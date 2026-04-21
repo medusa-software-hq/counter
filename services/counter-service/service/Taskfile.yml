@@ -36,5 +36,5 @@ tasks:
   run:
     desc: Run the service locally (no auth, localhost CORS)
     cmds:
-      - ./gradlew :server:runLocal
+      - ./gradlew :local:run
     interactive: true
