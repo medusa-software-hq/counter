@@ -1,4 +1,4 @@
-name: Check counter-web infra
+name: Check web infra
 
 on:
   workflow_call:
@@ -40,11 +40,11 @@ jobs:
           terraform_version: ~> ${{ env.TERRAFORM_VERSION }}
 
       - name: Check formatting
-        working-directory: apps/counter-web/infra
+        working-directory: apps/web/infra
         run: terraform fmt -check -recursive
 
       - name: Plan Terraform application
-        working-directory: apps/counter-web/infra
+        working-directory: apps/web/infra
         env:
           TF_VAR_gcp_project_id: ${{ vars.GCP_PROJECT_ID }}
         run: |
