@@ -1,4 +1,4 @@
-name: Check counter-web app
+name: Check web SPA
 
 on:
   workflow_call:
@@ -11,8 +11,8 @@ env:
   CADDY_VERSION: 2.11.2
   NO_COLOR: 1
 
-  APP_PATH: apps/counter-web/app
-  FRONTEND_PATH: apps/counter-web/app/frontend
+  APP_PATH: apps/web/spa
+  FRONTEND_PATH: apps/web/spa/frontend
 
 jobs:
   build-frontend:

@@ -1,10 +1,10 @@
-name: Deploy counter-web app
+name: Deploy web SPA
 
 on:
   push:
     branches: ["trunk/*"]
     paths:
-      - "apps/counter-web/app/**"
+      - "apps/web/spa/**"
       - "proto/**"
 
   workflow_dispatch:
@@ -16,9 +16,9 @@ env:
   NO_COLOR: 1
 
   # Exact image path is arbitrary (as long as it's unique)
-  IMAGE_REF: ${{ vars.GCP_AR_REPO_ENDPOINT }}/counter-web/${{ github.sha }}
+  IMAGE_REF: ${{ vars.GCP_AR_REPO_ENDPOINT }}/web/${{ github.sha }}
 
-  APP_PATH: apps/counter-web/app
+  APP_PATH: apps/web/spa
 
 jobs:
   deploy-app:

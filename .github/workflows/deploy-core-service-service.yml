@@ -1,10 +1,10 @@
-name: Deploy counter-service service
+name: Deploy core service
 
 on:
   push:
     branches: ["trunk/*"]
     paths:
-      - "services/counter-service/service/**"
+      - "services/core-service/impl/**"
 
   workflow_dispatch:
 
@@ -16,9 +16,9 @@ env:
   NO_COLOR: 1
 
   # Exact image path is arbitrary (as long as it's unique)
-  IMAGE_REF: ${{ vars.GCP_AR_REPO_ENDPOINT }}/counter-service/${{ github.sha }}
+  IMAGE_REF: ${{ vars.GCP_AR_REPO_ENDPOINT }}/core-service/${{ github.sha }}
 
-  SERVICE_PATH: services/counter-service/service
+  SERVICE_PATH: services/core-service/impl
 
 jobs:
   deploy-service:

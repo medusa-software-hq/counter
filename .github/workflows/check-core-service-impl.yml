@@ -1,4 +1,4 @@
-name: Check counter-service service
+name: Check core service implementation
 
 on:
   workflow_call:
@@ -10,7 +10,7 @@ env:
   JAVA_VERSION: 21
   NO_COLOR: 1
 
-  SERVICE_PATH: services/counter-service/service
+  SERVICE_PATH: services/core-service/impl
 
 jobs:
   check-service:

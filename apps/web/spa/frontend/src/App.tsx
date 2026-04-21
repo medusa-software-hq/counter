@@ -103,9 +103,7 @@ function AppContent({ token }: { token: string }) {
           </div>
         </div>
         {error !== null && (
-          <p className="service-error">
-            Failed to reach counter-service: {error}
-          </p>
+          <p className="service-error">Failed to reach core-service: {error}</p>
         )}
       </section>
 

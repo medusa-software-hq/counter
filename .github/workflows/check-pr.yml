@@ -15,8 +15,8 @@ jobs:
     name: infra
     uses: ./.github/workflows/check-infra.yml
 
-  check-counter-web-infra:
-    name: counter-web (infra)
+  check-web-infra:
+    name: web (infra)
     uses: ./.github/workflows/check-web-infra.yml
     secrets: inherit
 
@@ -25,16 +25,12 @@ jobs:
       id-token: write
       pull-requests: write
 
-  check-counter-web-app:
-    name: counter-web (app) # 🎨 TEMPLATE EJECT: Rename this reference
-    uses: ./.github/workflows/check-web-app.yml
+  check-web-spa:
+    name: web (SPA)
+    uses: ./.github/workflows/check-web-spa.yml
 
-  check-counter-service-service:
-    name: counter-service (service) # 🎨 TEMPLATE EJECT: Rename this reference
-    uses: ./.github/workflows/check-core-service-service.yml
-
-  check-counter-service-infra:
-    name: counter-service (infra) # 🎨 TEMPLATE EJECT: Rename this reference
+  check-core-service-infra:
+    name: core service (infra)
     uses: ./.github/workflows/check-core-service-infra.yml
     secrets: inherit
 
@@ -42,3 +38,7 @@ jobs:
       contents: read
       id-token: write
       pull-requests: write
+
+  check-core-service-impl:
+    name: core service (implementation)
+    uses: ./.github/workflows/check-core-service-impl.yml
