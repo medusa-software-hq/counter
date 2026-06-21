@@ -40,8 +40,8 @@ tasks:
     deps: [frontend:lint]
 
   analyze:
-    desc: Analyze the app sources (frontend typecheck + Caddy validate)
-    deps: [frontend:typecheck, caddy:validate]
+    desc: Analyze the app sources (frontend typecheck + tests + Caddy validate)
+    deps: [frontend:typecheck, frontend:test, caddy:validate]
 
   build:
     desc: Build the frontend

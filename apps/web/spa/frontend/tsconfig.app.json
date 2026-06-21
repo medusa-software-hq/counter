@@ -4,7 +4,12 @@
     "target": "es2023",
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
     "module": "esnext",
-    "types": ["vite/client", "google.accounts"],
+    "types": [
+      "vite/client",
+      "google.accounts",
+      "vitest/globals",
+      "@testing-library/jest-dom"
+    ],
     "skipLibCheck": true,
 
     /* Bundler mode */
@@ -15,6 +20,13 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
+    /* Path aliases */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@test-utils": ["./test-utils"]
+    },
+
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,
@@ -22,5 +34,5 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src"]
+  "include": ["src", "test-utils"]
 }

@@ -1,10 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { toast } from 'sonner';
 import { AuthContext, type AuthState, type AuthUser } from './AuthContext.tsx';
 
@@ -47,7 +41,9 @@ function userFromPayload(payload: JwtPayload): AuthUser {
 
 function loadCachedToken(): { token: string; payload: JwtPayload } | null {
   const raw = localStorage.getItem(TOKEN_STORAGE_KEY);
-  if (!raw) return null;
+  if (!raw) {
+    return null;
+  }
   try {
     const payload = parseJwt(raw);
     const secondsRemaining = payload.exp - Date.now() / 1000;
@@ -118,7 +114,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Schedule silent refresh 60 s before expiry.
     const msUntilRefresh = payload.exp * 1000 - Date.now() - 60_000;
-    if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
+    if (refreshTimerRef.current) {
+      clearTimeout(refreshTimerRef.current);
+    }
     if (msUntilRefresh > 0) {
       refreshTimerRef.current = setTimeout(() => {
         google.accounts.id.prompt();
@@ -130,7 +128,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     (response: google.accounts.id.CredentialResponse) => {
       applyToken(response.credential);
     },
-    [applyToken],
+    [applyToken]
   );
 
   const signIn = useCallback(() => {
@@ -138,7 +136,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const handleUnauthorized = useCallback(() => {
-    if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
+    if (refreshTimerRef.current) {
+      clearTimeout(refreshTimerRef.current);
+    }
     localStorage.removeItem(TOKEN_STORAGE_KEY);
     setState({ status: 'unauthenticated' });
     sessionToastIdRef.current = toast.error('Your session has expired.', {
@@ -158,7 +158,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     loadGisScript()
       .then(() => {
-        if (cancelled) return;
+        if (cancelled) {
+          return;
+        }
 
         google.accounts.id.initialize({
           client_id: CLIENT_ID,
@@ -168,34 +170,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
 
         google.accounts.id.prompt((notification) => {
-          if (cancelled) return;
+          if (cancelled) {
+            return;
+          }
           if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
             // If we had a cached token we're already showing content — stay
             // authenticated optimistically until the server rejects the token.
             // Only fall back to the sign-in wall if there was nothing cached.
-            setState((prev) =>
-              prev.status === 'loading' ? { status: 'unauthenticated' } : prev,
-            );
+            setState((prev) => (prev.status === 'loading' ? { status: 'unauthenticated' } : prev));
           }
         });
       })
       .catch(() => {
         if (!cancelled) {
-          setState((prev) =>
-            prev.status === 'loading' ? { status: 'unauthenticated' } : prev,
-          );
+          setState((prev) => (prev.status === 'loading' ? { status: 'unauthenticated' } : prev));
         }
       });
 
     return () => {
       cancelled = true;
-      if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
+      if (refreshTimerRef.current) {
+        clearTimeout(refreshTimerRef.current);
+      }
     };
   }, [handleCredentialResponse]);
 
-  return (
-    <AuthContext value={{ state, handleUnauthorized, signIn }}>
-      {children}
-    </AuthContext>
-  );
+  return <AuthContext value={{ state, handleUnauthorized, signIn }}>{children}</AuthContext>;
 }

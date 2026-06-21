@@ -1,15 +1,18 @@
-import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vitest/config';
+import { fileURLToPath } from 'node:url';
 
 export default defineConfig(({ command }) => ({
   plugins: [react()],
-  ...(command === 'serve' && {
-    resolve: {
-      alias: {
+  resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+      '@test-utils': fileURLToPath(new URL('./test-utils', import.meta.url)),
+      ...(command === 'serve' && {
         '/src/main.tsx': '/src/main.local.tsx',
-      },
+      }),
     },
-  }),
+  },
   build: {
     rollupOptions: {
       output: {
@@ -18,5 +21,10 @@ export default defineConfig(({ command }) => ({
         assetFileNames: 'assets/[name]-[hash][extname]',
       },
     },
+  },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './vitest.setup.mjs',
   },
 }));

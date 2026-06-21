@@ -9,8 +9,9 @@ RUN apk add --no-cache curl && \
 
 WORKDIR /app
 
-COPY frontend/package.json frontend/package-lock.json ./
-RUN npm ci
+COPY frontend/package.json frontend/yarn.lock frontend/.yarnrc.yml ./
+COPY frontend/.yarn ./.yarn
+RUN node .yarn/releases/yarn-4.14.1.cjs install --immutable
 
 COPY frontend/ .
 COPY --from=proto . /proto/

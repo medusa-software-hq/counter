@@ -1,13 +1,13 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import './App.css';
 import { createClient } from '@connectrpc/connect';
 import { createGrpcWebTransport } from '@connectrpc/connect-web';
-import { CounterService } from './gen/medusa/counter/v1/counter_service_pb.ts';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import heroImg from './assets/hero.png';
 import reactLogo from './assets/react.svg';
 import viteLogo from './assets/vite.svg';
-import heroImg from './assets/hero.png';
-import './App.css';
-import { useAuth } from './useAuth.tsx';
+import { CounterService } from './gen/medusa/counter/v1/counter_service_pb.ts';
 import { SignInWall } from './SignInWall.tsx';
+import { useAuth } from './useAuth.tsx';
 
 const API_URL = import.meta.env.VITE_API_URL as string;
 
@@ -26,10 +26,7 @@ function AppContent({ token }: { token: string }) {
   const [count, setCount] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const headers = useMemo(
-    () => ({ Authorization: `Bearer ${token}` }),
-    [token],
-  );
+  const headers = useMemo(() => ({ Authorization: `Bearer ${token}` }), [token]);
 
   const handleError = useCallback(
     (err: unknown) => {
@@ -40,7 +37,7 @@ function AppContent({ token }: { token: string }) {
         setError(message);
       }
     },
-    [handleUnauthorized],
+    [handleUnauthorized]
   );
 
   useEffect(() => {
@@ -49,9 +46,13 @@ function AppContent({ token }: { token: string }) {
     async function load() {
       try {
         const response = await client.getCount({}, { headers });
-        if (!cancelled) setCount(response.count);
+        if (!cancelled) {
+          setCount(response.count);
+        }
       } catch (err: unknown) {
-        if (!cancelled) handleError(err);
+        if (!cancelled) {
+          handleError(err);
+        }
       }
     }
 
@@ -91,40 +92,36 @@ function AppContent({ token }: { token: string }) {
         </div>
         <div>
           <h1>{count ?? '…'}</h1>
-          <div
-            style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}
-          >
-            <button className="counter" onClick={() => void decrement()}>
+          <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+            <button type="button" className="counter" onClick={() => void decrement()}>
               −
             </button>
-            <button className="counter" onClick={() => void increment()}>
+            <button type="button" className="counter" onClick={() => void increment()}>
               +
             </button>
           </div>
         </div>
-        {error !== null && (
-          <p className="service-error">Failed to reach the API: {error}</p>
-        )}
+        {error !== null && <p className="service-error">Failed to reach the API: {error}</p>}
       </section>
 
-      <div className="ticks"></div>
+      <div className="ticks" />
 
       <section id="next-steps">
         <div id="docs">
           <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
+            <use href="/icons.svg#documentation-icon" />
           </svg>
           <h2>Documentation</h2>
           <p>Your questions, answered</p>
           <ul>
             <li>
-              <a href="https://vite.dev/" target="_blank">
+              <a href="https://vite.dev/" target="_blank" rel="noreferrer">
                 <img className="logo" src={viteLogo} alt="" />
                 Explore Vite
               </a>
             </li>
             <li>
-              <a href="https://react.dev/" target="_blank">
+              <a href="https://react.dev/" target="_blank" rel="noreferrer">
                 <img className="button-icon" src={reactLogo} alt="" />
                 Learn more
               </a>
@@ -133,55 +130,39 @@ function AppContent({ token }: { token: string }) {
         </div>
         <div id="social">
           <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
+            <use href="/icons.svg#social-icon" />
           </svg>
           <h2>Connect with us</h2>
           <p>Join the Vite community</p>
           <ul>
             <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
+              <a href="https://github.com/vitejs/vite" target="_blank" rel="noreferrer">
+                <svg className="button-icon" role="presentation" aria-hidden="true">
+                  <use href="/icons.svg#github-icon" />
                 </svg>
                 GitHub
               </a>
             </li>
             <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
+              <a href="https://chat.vite.dev/" target="_blank" rel="noreferrer">
+                <svg className="button-icon" role="presentation" aria-hidden="true">
+                  <use href="/icons.svg#discord-icon" />
                 </svg>
                 Discord
               </a>
             </li>
             <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
+              <a href="https://x.com/vite_js" target="_blank" rel="noreferrer">
+                <svg className="button-icon" role="presentation" aria-hidden="true">
+                  <use href="/icons.svg#x-icon" />
                 </svg>
                 X.com
               </a>
             </li>
             <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
+              <a href="https://bsky.app/profile/vite.dev" target="_blank" rel="noreferrer">
+                <svg className="button-icon" role="presentation" aria-hidden="true">
+                  <use href="/icons.svg#bluesky-icon" />
                 </svg>
                 Bluesky
               </a>
@@ -190,8 +171,8 @@ function AppContent({ token }: { token: string }) {
         </div>
       </section>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
+      <div className="ticks" />
+      <section id="spacer" />
     </>
   );
 }
@@ -199,8 +180,12 @@ function AppContent({ token }: { token: string }) {
 function App() {
   const { state } = useAuth();
 
-  if (state.status === 'loading') return null;
-  if (state.status === 'unauthenticated') return <SignInWall />;
+  if (state.status === 'loading') {
+    return null;
+  }
+  if (state.status === 'unauthenticated') {
+    return <SignInWall />;
+  }
   return <AppContent token={state.token} />;
 }
 
