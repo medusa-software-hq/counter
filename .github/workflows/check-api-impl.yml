@@ -10,7 +10,7 @@ env:
   JAVA_VERSION: 21
   NO_COLOR: 1
 
-  SERVICE_PATH: backend/service/impl
+  SERVICE_PATH: backend/api/impl
 
 jobs:
   check-service:

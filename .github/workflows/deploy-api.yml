@@ -4,7 +4,7 @@ on:
   push:
     branches: ["trunk/*"]
     paths:
-      - "backend/service/impl/**"
+      - "backend/api/impl/**"
 
   workflow_dispatch:
 
@@ -18,7 +18,7 @@ env:
   # Exact image path is arbitrary (as long as it's unique)
   IMAGE_REF: ${{ vars.GCP_AR_REPO_ENDPOINT }}/api/${{ github.sha }}
 
-  SERVICE_PATH: backend/service/impl
+  SERVICE_PATH: backend/api/impl
 
 jobs:
   deploy-service:

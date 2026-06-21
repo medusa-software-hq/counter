@@ -42,15 +42,15 @@ jobs:
       - uses: terraform-linters/setup-tflint@v6.2.2
 
       - name: Check formatting
-        working-directory: backend/service/infra
+        working-directory: backend/api/infra
         run: terraform fmt -check -recursive
 
       - name: Lint Terraform configuration
-        working-directory: backend/service/infra
+        working-directory: backend/api/infra
         run: tflint --recursive
 
       - name: Plan Terraform application
-        working-directory: backend/service/infra
+        working-directory: backend/api/infra
         env:
           TF_VAR_gcp_project_id: ${{ vars.GCP_PROJECT_ID }}
         run: |
