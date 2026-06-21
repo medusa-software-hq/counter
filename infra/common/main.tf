@@ -22,7 +22,7 @@ locals {
 
   # Google OAuth 2.0 client ID
   # https://console.cloud.google.com/auth/clients/852264381191-crah9udgr1d44tposdv348k091t2upb6.apps.googleusercontent.com?project=ms-auth-284371d2
-  # 🎨 TEMPLATE POST-EJECT: Create a new OAuth Client ID manually and change it here
+  # 🎨 TEMPLATE POST-EJECT: Create a new OAuth Client ID manually (🔗 https://console.cloud.google.com/auth/clients/create?project=ms-auth-284371d2) and change it here 👆
   google_client_id = "852264381191-crah9udgr1d44tposdv348k091t2upb6.apps.googleusercontent.com"
 }
 
