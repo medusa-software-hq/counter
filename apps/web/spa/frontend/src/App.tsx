@@ -1,6 +1,6 @@
-import './App.css';
 import { createClient } from '@connectrpc/connect';
 import { createGrpcWebTransport } from '@connectrpc/connect-web';
+import { Box, Button, Group, SimpleGrid, Stack, Text, Title } from '@mantine/core';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import heroImg from './assets/hero.png';
 import reactLogo from './assets/react.svg';
@@ -8,6 +8,7 @@ import viteLogo from './assets/vite.svg';
 import { CounterService } from './gen/medusa/counter/v1/counter_service_pb.ts';
 import { SignInWall } from './SignInWall.tsx';
 import { useAuth } from './useAuth.tsx';
+import classes from './App.module.css';
 
 const API_URL = import.meta.env.VITE_API_URL as string;
 
@@ -20,6 +21,13 @@ const transport = createGrpcWebTransport({
 });
 
 const client = createClient(CounterService, transport);
+
+const socialLinks = [
+  { label: 'GitHub', href: 'https://github.com/vitejs/vite', icon: 'github-icon' },
+  { label: 'Discord', href: 'https://chat.vite.dev/', icon: 'discord-icon' },
+  { label: 'X.com', href: 'https://x.com/vite_js', icon: 'x-icon' },
+  { label: 'Bluesky', href: 'https://bsky.app/profile/vite.dev', icon: 'bluesky-icon' },
+];
 
 function AppContent({ token }: { token: string }) {
   const { handleUnauthorized } = useAuth();
@@ -84,95 +92,104 @@ function AppContent({ token }: { token: string }) {
 
   return (
     <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+      <Box className={classes.center}>
+        <div className={classes.hero}>
+          <img src={heroImg} className={classes.base} width="170" height="179" alt="" />
+          <img src={reactLogo} className={classes.framework} alt="React logo" />
+          <img src={viteLogo} className={classes.vite} alt="Vite logo" />
         </div>
-        <div>
-          <h1>{count ?? '…'}</h1>
-          <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
-            <button type="button" className="counter" onClick={() => void decrement()}>
+        <Stack align="center" gap="md">
+          <Title order={1} className={classes.count}>
+            {count ?? '…'}
+          </Title>
+          <Group justify="center" gap="xs">
+            <Button
+              variant="light"
+              size="md"
+              aria-label="Decrement"
+              onClick={() => void decrement()}
+            >
               −
-            </button>
-            <button type="button" className="counter" onClick={() => void increment()}>
+            </Button>
+            <Button
+              variant="light"
+              size="md"
+              aria-label="Increment"
+              onClick={() => void increment()}
+            >
               +
-            </button>
-          </div>
-        </div>
-        {error !== null && <p className="service-error">Failed to reach the API: {error}</p>}
-      </section>
+            </Button>
+          </Group>
+          {error !== null && (
+            <Text c="red" size="sm">
+              Failed to reach the API: {error}
+            </Text>
+          )}
+        </Stack>
+      </Box>
 
-      <div className="ticks" />
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
+      <SimpleGrid cols={{ base: 1, sm: 2 }} spacing={0} className={classes.nextSteps}>
+        <Box className={classes.section}>
+          <svg className={classes.sectionIcon} role="presentation" aria-hidden="true">
             <use href="/icons.svg#documentation-icon" />
           </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank" rel="noreferrer">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank" rel="noreferrer">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
+          <Title order={2} mb={4}>
+            Documentation
+          </Title>
+          <Text c="dimmed">Your questions, answered</Text>
+          <Group gap="xs" mt="md">
+            <Button
+              component="a"
+              href="https://vite.dev/"
+              target="_blank"
+              rel="noreferrer"
+              variant="default"
+              leftSection={<img className={classes.linkIcon} src={viteLogo} alt="" />}
+            >
+              Explore Vite
+            </Button>
+            <Button
+              component="a"
+              href="https://react.dev/"
+              target="_blank"
+              rel="noreferrer"
+              variant="default"
+              leftSection={<img className={classes.linkIcon} src={reactLogo} alt="" />}
+            >
+              Learn more
+            </Button>
+          </Group>
+        </Box>
+
+        <Box className={classes.section}>
+          <svg className={classes.sectionIcon} role="presentation" aria-hidden="true">
             <use href="/icons.svg#social-icon" />
           </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank" rel="noreferrer">
-                <svg className="button-icon" role="presentation" aria-hidden="true">
-                  <use href="/icons.svg#github-icon" />
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank" rel="noreferrer">
-                <svg className="button-icon" role="presentation" aria-hidden="true">
-                  <use href="/icons.svg#discord-icon" />
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank" rel="noreferrer">
-                <svg className="button-icon" role="presentation" aria-hidden="true">
-                  <use href="/icons.svg#x-icon" />
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank" rel="noreferrer">
-                <svg className="button-icon" role="presentation" aria-hidden="true">
-                  <use href="/icons.svg#bluesky-icon" />
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks" />
-      <section id="spacer" />
+          <Title order={2} mb={4}>
+            Connect with us
+          </Title>
+          <Text c="dimmed">Join the Vite community</Text>
+          <Group gap="xs" mt="md">
+            {socialLinks.map(({ label, href, icon }) => (
+              <Button
+                key={label}
+                component="a"
+                href={href}
+                target="_blank"
+                rel="noreferrer"
+                variant="default"
+                leftSection={
+                  <svg className={classes.linkIcon} role="presentation" aria-hidden="true">
+                    <use href={`/icons.svg#${icon}`} />
+                  </svg>
+                }
+              >
+                {label}
+              </Button>
+            ))}
+          </Group>
+        </Box>
+      </SimpleGrid>
     </>
   );
 }

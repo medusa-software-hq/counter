@@ -1,3 +1,4 @@
+import { Center, Stack, Text, Title } from '@mantine/core';
 import { useEffect, useRef } from 'react';
 import { useAuth } from './useAuth.tsx';
 
@@ -24,10 +25,12 @@ export function SignInWall() {
   void CLIENT_ID;
 
   return (
-    <div className="sign-in-wall">
-      <h1>Sign in</h1>
-      <p>Use your company account to continue.</p>
-      <div ref={buttonRef} className="sign-in-button" />
-    </div>
+    <Center mih="100svh">
+      <Stack align="center" gap="md">
+        <Title order={1}>Sign in</Title>
+        <Text c="dimmed">Use your company account to continue.</Text>
+        <div ref={buttonRef} />
+      </Stack>
+    </Center>
   );
 }
