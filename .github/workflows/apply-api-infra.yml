@@ -1,10 +1,10 @@
-name: Apply core service infra
+name: Apply API infra
 
 on:
   push:
     branches: ["trunk/*"]
     paths:
-      - "services/core-service/infra/**"
+      - "backend/service/infra/**"
 
   workflow_dispatch:
 
@@ -43,7 +43,7 @@ jobs:
           terraform_version: ~> ${{ env.TERRAFORM_VERSION }}
 
       - name: Apply Terraform configuration
-        working-directory: services/core-service/infra
+        working-directory: backend/service/infra
         env:
           TF_VAR_gcp_project_id: ${{ vars.GCP_PROJECT_ID }}
         run: |

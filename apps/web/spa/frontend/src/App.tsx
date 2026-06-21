@@ -9,14 +9,14 @@ import './App.css';
 import { useAuth } from './useAuth.tsx';
 import { SignInWall } from './SignInWall.tsx';
 
-const CORE_SERVICE_URL = import.meta.env.VITE_CORE_SERVICE_URL as string;
+const API_URL = import.meta.env.VITE_API_URL as string;
 
-if (!CORE_SERVICE_URL) {
-  throw new Error('VITE_CORE_SERVICE_URL is not set');
+if (!API_URL) {
+  throw new Error('VITE_API_URL is not set');
 }
 
 const transport = createGrpcWebTransport({
-  baseUrl: CORE_SERVICE_URL,
+  baseUrl: API_URL,
 });
 
 const client = createClient(CounterService, transport);
@@ -103,7 +103,7 @@ function AppContent({ token }: { token: string }) {
           </div>
         </div>
         {error !== null && (
-          <p className="service-error">Failed to reach core-service: {error}</p>
+          <p className="service-error">Failed to reach the API: {error}</p>
         )}
       </section>
 

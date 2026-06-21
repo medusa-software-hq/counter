@@ -29,9 +29,9 @@ jobs:
     name: web (SPA)
     uses: ./.github/workflows/check-web-spa.yml
 
-  check-core-service-infra:
-    name: core service (infra)
-    uses: ./.github/workflows/check-core-service-infra.yml
+  check-api-infra:
+    name: api (infra)
+    uses: ./.github/workflows/check-api-infra.yml
     secrets: inherit
 
     permissions:
@@ -39,6 +39,6 @@ jobs:
       id-token: write
       pull-requests: write
 
-  check-core-service-impl:
-    name: core service (implementation)
-    uses: ./.github/workflows/check-core-service-impl.yml
+  check-api-impl:
+    name: api (implementation)
+    uses: ./.github/workflows/check-api-impl.yml

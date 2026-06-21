@@ -12,10 +12,10 @@ resource "github_actions_variable" "gcp_primary_location" {
   value         = module.common.gcp_primary_location
 }
 
-resource "github_actions_variable" "gcp_core_service_run_service_name" {
+resource "github_actions_variable" "gcp_api_run_service_name" {
   repository    = github_repository.this.name
-  variable_name = "GCP_CORE_SERVICE_RUN_SERVICE_NAME"
-  value         = module.common.gcp_core_service_run_service_name
+  variable_name = "GCP_API_RUN_SERVICE_NAME"
+  value         = module.common.gcp_api_run_service_name
 }
 
 resource "github_actions_variable" "gcp_web_run_service_name" {
@@ -42,12 +42,12 @@ resource "github_actions_variable" "gcp_ar_repo_endpoint" {
   value         = local.gcp_ar_repo_endpoint
 }
 
-resource "github_actions_variable" "gcp_core_service_url" {
+resource "github_actions_variable" "gcp_api_url" {
   repository    = github_repository.this.name
-  variable_name = module.common.gh_core_service_url_var_name
+  variable_name = module.common.gh_api_url_var_name
 
   # Managed manually (for now):
-  # https://github.com/organizations/medusa-software-hq/settings/variables/actions/CORE_SERVICE_URL
+  # https://github.com/organizations/medusa-software-hq/settings/variables/actions/API_URL
   value = "https://example.com"
 
   lifecycle {

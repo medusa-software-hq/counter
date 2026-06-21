@@ -10,12 +10,12 @@ locals {
   gcp_meta_project_id             = "ms-meta-9aaf29f0"
   gcp_terraform_state_bucket_name = "ms-tfstate-c1984596bdabf023"
 
-  gcp_core_service_run_service_name = "core-service"
-  gcp_web_run_service_name          = "web"
+  gcp_api_run_service_name = "api"
+  gcp_web_run_service_name = "web"
 
-  gh_organization_name         = "medusa-software-hq"
-  gh_repo_name                 = "counter" # 🎨 TEMPLATE EJECT: Change the repo name
-  gh_core_service_url_var_name = "CORE_SERVICE_URL"
+  gh_organization_name = "medusa-software-hq"
+  gh_repo_name         = "counter" # 🎨 TEMPLATE EJECT: Change the repo name
+  gh_api_url_var_name  = "API_URL"
 
   project_base_name = "counter" # 🎨 TEMPLATE EJECT: Choose an org-unique project base name
   project_variant   = "v3"      # 🎨 TEMPLATE EJECT: Choose a project-unique variant name
@@ -46,8 +46,8 @@ output "gcp_terraform_state_bucket_name" {
   value = local.gcp_terraform_state_bucket_name
 }
 
-output "gcp_core_service_run_service_name" {
-  value = local.gcp_core_service_run_service_name
+output "gcp_api_run_service_name" {
+  value = local.gcp_api_run_service_name
 }
 
 output "gcp_web_run_service_name" {
@@ -62,8 +62,8 @@ output "gh_repo_name" {
   value = local.gh_repo_name
 }
 
-output "gh_core_service_url_var_name" {
-  value = local.gh_core_service_url_var_name
+output "gh_api_url_var_name" {
+  value = local.gh_api_url_var_name
 }
 
 output "project_base_name" {

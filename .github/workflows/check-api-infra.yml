@@ -1,4 +1,4 @@
-name: Check core service infra
+name: Check API infra
 
 on:
   workflow_call:
@@ -42,15 +42,15 @@ jobs:
       - uses: terraform-linters/setup-tflint@v6.2.2
 
       - name: Check formatting
-        working-directory: services/core-service/infra
+        working-directory: backend/service/infra
         run: terraform fmt -check -recursive
 
       - name: Lint Terraform configuration
-        working-directory: services/core-service/infra
+        working-directory: backend/service/infra
         run: tflint --recursive
 
       - name: Plan Terraform application
-        working-directory: services/core-service/infra
+        working-directory: backend/service/infra
         env:
           TF_VAR_gcp_project_id: ${{ vars.GCP_PROJECT_ID }}
         run: |
