@@ -13,13 +13,13 @@ includes:
     taskfile: apps/web/infra/Taskfile.yml
     dir: apps/web/infra
 
-  core-service:impl:
-    taskfile: services/core-service/impl/Taskfile.yml
-    dir: services/core-service/impl
+  api:impl:
+    taskfile: backend/api/impl/Taskfile.yml
+    dir: backend/api/impl
 
-  core-service:infra:
-    taskfile: services/core-service/infra/Taskfile.yml
-    dir: services/core-service/infra
+  api:infra:
+    taskfile: backend/api/infra/Taskfile.yml
+    dir: backend/api/infra
 
 tasks:
   github-ci:lint:
@@ -48,8 +48,8 @@ tasks:
       - infra:checkFormatting
       - web:app:checkFormatting
       - web:infra:checkFormatting
-      - core-service:impl:checkFormatting
-      - core-service:infra:checkFormatting
+      - api:impl:checkFormatting
+      - api:infra:checkFormatting
 
   fixFormatting-all:
     desc: Fix formatting for the entire codebase
@@ -58,8 +58,8 @@ tasks:
       - infra:fixFormatting
       - web:app:fixFormatting
       - web:infra:fixFormatting
-      - core-service:impl:fixFormatting
-      - core-service:infra:fixFormatting
+      - api:impl:fixFormatting
+      - api:infra:fixFormatting
 
   lint-all:
     desc: Lint the entire codebase
@@ -68,8 +68,8 @@ tasks:
       - infra:lint
       - web:app:lint
       - web:infra:lint
-      - core-service:impl:lint
-      - core-service:infra:lint
+      - api:impl:lint
+      - api:infra:lint
 
   analyze-all:
     desc: Analyze the entire codebase
@@ -77,10 +77,10 @@ tasks:
       - infra:validate
       - web:app:analyze
       - web:infra:validate
-      - core-service:infra:validate
+      - api:infra:validate
 
   run:
-    desc: Run the frontend and core service locally
+    desc: Run the frontend and the API locally
     deps:
       - web:app:run
-      - core-service:impl:run
+      - api:impl:run

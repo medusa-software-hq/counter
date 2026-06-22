@@ -1,10 +1,10 @@
-name: Deploy core service
+name: Deploy API
 
 on:
   push:
     branches: ["trunk/*"]
     paths:
-      - "services/core-service/impl/**"
+      - "backend/api/impl/**"
 
   workflow_dispatch:
 
@@ -16,9 +16,9 @@ env:
   NO_COLOR: 1
 
   # Exact image path is arbitrary (as long as it's unique)
-  IMAGE_REF: ${{ vars.GCP_AR_REPO_ENDPOINT }}/core-service/${{ github.sha }}
+  IMAGE_REF: ${{ vars.GCP_AR_REPO_ENDPOINT }}/api/${{ github.sha }}
 
-  SERVICE_PATH: services/core-service/impl
+  SERVICE_PATH: backend/api/impl
 
 jobs:
   deploy-service:
@@ -59,12 +59,12 @@ jobs:
 
       - name: Deploy to Cloud Run
         run: |
-          gcloud run deploy ${{ vars.GCP_CORE_SERVICE_RUN_SERVICE_NAME }} \
+          gcloud run deploy ${{ vars.GCP_API_RUN_SERVICE_NAME }} \
             --project=${{ vars.GCP_PROJECT_ID }} \
             --region=${{ vars.GCP_PRIMARY_LOCATION }} \
             --image=${{ env.IMAGE_REF }} \
             --quiet
-          gcloud run services describe ${{ vars.GCP_CORE_SERVICE_RUN_SERVICE_NAME }} \
+          gcloud run services describe ${{ vars.GCP_API_RUN_SERVICE_NAME }} \
             --project=${{ vars.GCP_PROJECT_ID }} \
             --region=${{ vars.GCP_PRIMARY_LOCATION }} \
             --format='value(status.url)' | tee service-url.txt

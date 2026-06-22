@@ -1,12 +1,7 @@
-name: Apply core service infra
+name: Check API infra
 
 on:
-  push:
-    branches: ["trunk/*"]
-    paths:
-      - "services/core-service/infra/**"
-
-  workflow_dispatch:
+  workflow_call:
 
 permissions:
   contents: read
@@ -19,13 +14,15 @@ env:
   NO_COLOR: 1
 
 jobs:
-  apply-config:
-    name: Apply Terraform configuration
+  check-config:
+    name: Check Terraform configuration
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
 
     permissions:
       contents: read
       id-token: write
+      pull-requests: write
 
     steps:
       - name: Checkout
@@ -42,10 +39,27 @@ jobs:
         with:
           terraform_version: ~> ${{ env.TERRAFORM_VERSION }}
 
-      - name: Apply Terraform configuration
-        working-directory: services/core-service/infra
+      - uses: terraform-linters/setup-tflint@v6.2.2
+
+      - name: Check formatting
+        working-directory: backend/api/infra
+        run: terraform fmt -check -recursive
+
+      - name: Lint Terraform configuration
+        working-directory: backend/api/infra
+        run: tflint --recursive
+
+      - name: Plan Terraform application
+        working-directory: backend/api/infra
         env:
           TF_VAR_gcp_project_id: ${{ vars.GCP_PROJECT_ID }}
         run: |
           terraform init
-          terraform apply -auto-approve
+          terraform plan | tee terraform-plan.txt
+          {
+            echo '## Terraform plan'
+            echo ''
+            echo '```'
+            cat terraform-plan.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

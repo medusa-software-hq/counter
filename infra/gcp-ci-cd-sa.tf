@@ -57,13 +57,6 @@ resource "google_project_iam_member" "cicd_sa_storage_admin" {
   member  = "serviceAccount:${google_service_account.cicd_sa.email}"
 }
 
-# Grant CI/CD SA compute admin on the GCP project (manage ALB, URL maps, SSL certs)
-resource "google_project_iam_member" "cicd_sa_compute_admin" {
-  project = local.gcp_project_id
-  role    = "roles/compute.admin"
-  member  = "serviceAccount:${google_service_account.cicd_sa.email}"
-}
-
 # Grant CI/CD SA Cloud Run admin (deploy Cloud Run services)
 resource "google_project_iam_member" "cicd_sa_run_admin" {
   project = local.gcp_project_id

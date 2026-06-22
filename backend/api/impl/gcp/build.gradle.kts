@@ -7,7 +7,7 @@ plugins {
 
 val javaVersion = 21
 val containerPort = 8080
-val containerImageRef = findProperty("jib.imageRef")?.toString() ?: "core-service"
+val containerImageRef = findProperty("jib.imageRef")?.toString() ?: "api"
 val containerImageTag = findProperty("jib.imageTag")?.toString() ?: "local"
 
 dependencies { implementation(project(":shared")) }

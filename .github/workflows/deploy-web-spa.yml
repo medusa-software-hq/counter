@@ -56,7 +56,7 @@ jobs:
           build-args: |
             VITE_GOOGLE_CLIENT_ID=${{ vars.GOOGLE_CLIENT_ID }}
             VITE_GOOGLE_HD=${{ vars.GOOGLE_ALLOWED_DOMAIN }}
-            VITE_CORE_SERVICE_URL=${{ vars.CORE_SERVICE_URL }}
+            VITE_API_URL=${{ vars.API_URL }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

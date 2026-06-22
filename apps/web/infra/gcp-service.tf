@@ -11,7 +11,12 @@ resource "google_cloud_run_v2_service" "primary" {
   name                = module.common.gcp_web_run_service_name
   location            = module.common.gcp_primary_location
   deletion_protection = false # This project is experimental
-  ingress             = "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER"
+  ingress             = "INGRESS_TRAFFIC_ALL"
+
+  # Identity-Aware Proxy enabled directly on the service — no load balancer
+  # required. IAP secures every ingress path, including the default run.app URL
+  # and the mapped custom domain.
+  iap_enabled = true
 
   template {
     service_account = google_service_account.primary_service_sa.email
@@ -39,32 +44,6 @@ resource "google_cloud_run_v2_service" "primary" {
   traffic {
     type    = "TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST"
     percent = 100
-  }
-}
-
-# Load balancing
-
-resource "google_compute_region_network_endpoint_group" "primary_service_neg" {
-  name                  = "primary-neg"
-  network_endpoint_type = "SERVERLESS"
-  region                = module.common.gcp_primary_location
-
-  cloud_run {
-    service = google_cloud_run_v2_service.primary.name
-  }
-}
-
-resource "google_compute_backend_service" "primary_service_compute_backend" {
-  name                  = "primary-service-compute-backend"
-  load_balancing_scheme = "EXTERNAL_MANAGED"
-  protocol              = "HTTP"
-
-  backend {
-    group = google_compute_region_network_endpoint_group.primary_service_neg.id
-  }
-
-  iap {
-    enabled = true
   }
 }
 

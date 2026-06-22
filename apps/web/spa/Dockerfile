@@ -9,8 +9,9 @@ RUN apk add --no-cache curl && \
 
 WORKDIR /app
 
-COPY frontend/package.json frontend/package-lock.json ./
-RUN npm ci
+COPY frontend/package.json frontend/yarn.lock frontend/.yarnrc.yml ./
+COPY frontend/.yarn ./.yarn
+RUN node .yarn/releases/yarn-4.14.1.cjs install --immutable
 
 COPY frontend/ .
 COPY --from=proto . /proto/
@@ -19,10 +20,10 @@ RUN buf generate
 
 ARG VITE_GOOGLE_CLIENT_ID
 ARG VITE_GOOGLE_HD
-ARG VITE_CORE_SERVICE_URL
+ARG VITE_API_URL
 ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
 ENV VITE_GOOGLE_HD=$VITE_GOOGLE_HD
-ENV VITE_CORE_SERVICE_URL=$VITE_CORE_SERVICE_URL
+ENV VITE_API_URL=$VITE_API_URL
 
 RUN npx vite build
 
