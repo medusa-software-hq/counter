@@ -52,7 +52,7 @@ resource "google_project_service" "apis" {
 # Override the org-level iam.allowedPolicyMemberDomains constraint at the project level to allow allUsers on the public
 # assets bucket.
 resource "google_org_policy_policy" "allow_all_iam_members" {
-  provider = google.orgpolicy
+  provider = google.quota_override
 
   name   = "projects/${local.gcp_project_id}/policies/iam.allowedPolicyMemberDomains"
   parent = "projects/${local.gcp_project_id}"

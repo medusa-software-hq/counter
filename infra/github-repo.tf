@@ -30,12 +30,13 @@ locals {
   # GitHub Actions integration ID (discovered manually)
   gh_actions_integration_id = 15368
 
-  check_workflows_job_name = "workflows"
-  check_infra_job_name     = "infra"
-  check_web_infra_job_name = "web (infra)"
-  check_web_spa_job_name   = "web (SPA)"
-  check_api_infra_job_name = "api (infra)"
-  check_api_impl_job_name  = "api (implementation)"
+  check_workflows_job_name          = "workflows"
+  check_infra_job_name              = "infra"
+  check_web_infra_job_name          = "web (infra)"
+  check_web_domain_mapping_job_name = "web (domain mapping)"
+  check_web_spa_job_name            = "web (SPA)"
+  check_api_infra_job_name          = "api (infra)"
+  check_api_impl_job_name           = "api (implementation)"
 }
 
 # Branch protection ruleset for the default branch
@@ -77,6 +78,11 @@ resource "github_repository_ruleset" "default_branch" {
 
       required_check {
         context        = "${local.check_web_infra_job_name} / Check Terraform configuration"
+        integration_id = local.gh_actions_integration_id
+      }
+
+      required_check {
+        context        = "${local.check_web_domain_mapping_job_name} / Check Terraform configuration"
         integration_id = local.gh_actions_integration_id
       }
 

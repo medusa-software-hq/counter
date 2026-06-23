@@ -25,6 +25,10 @@ jobs:
       id-token: write
       pull-requests: write
 
+  check-web-domain-mapping:
+    name: web (domain mapping)
+    uses: ./.github/workflows/check-web-domain-mapping.yml
+
   check-web-spa:
     name: web (SPA)
     uses: ./.github/workflows/check-web-spa.yml
