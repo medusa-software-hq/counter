@@ -1,20 +1,20 @@
 # Configuration
+#
+# The Cloud Run domain mapping is split out from the web foundation because it
+# must be applied by the shared org-level domain-mapper service account (the only
+# identity that's a verified owner of the domain), not by this project's CI/CD SA.
 
 terraform {
   required_version = ">= 1.14"
 
   backend "gcs" {
     bucket = "ms-tfstate-c1984596bdabf023"
-    prefix = "projects/counter/v4/apps/web/foundation" # 🎨 TEMPLATE EJECT: Update the prefix (!)
+    prefix = "projects/counter/v4/apps/web/domain-mapping" # 🎨 TEMPLATE EJECT: Update the prefix (!)
   }
 
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = "~> 7.25"
-    }
-    google-beta = {
-      source  = "hashicorp/google-beta"
       version = "~> 7.25"
     }
     cloudflare = {
@@ -27,7 +27,7 @@ terraform {
 # Module imports
 
 module "common" {
-  source = "../../../infra/common"
+  source = "../../../../infra/common"
 }
 
 # Providers

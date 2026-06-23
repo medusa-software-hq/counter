@@ -38,13 +38,14 @@ provider "google" {
   region  = module.common.gcp_primary_location
 }
 
-# Secondary Google provider
+# Secondary Google provider that bills API quota to this project. Required for
+# APIs that need a quota project under user ADC (organization policy, Site
+# Verification, …).
 provider "google" {
-  alias   = "orgpolicy"
+  alias   = "quota_override"
   project = module.common.gcp_meta_project_id
   region  = module.common.gcp_primary_location
 
-  # Allow overriding the project for organization policy resources
   user_project_override = true
   billing_project       = local.gcp_project_id
 }

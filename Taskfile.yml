@@ -10,8 +10,12 @@ includes:
     dir: apps/web/spa
 
   web:infra:
-    taskfile: apps/web/infra/Taskfile.yml
-    dir: apps/web/infra
+    taskfile: apps/web/infra/foundation/Taskfile.yml
+    dir: apps/web/infra/foundation
+
+  web:domain-mapping:
+    taskfile: apps/web/infra/domain-mapping/Taskfile.yml
+    dir: apps/web/infra/domain-mapping
 
   api:impl:
     taskfile: backend/api/impl/Taskfile.yml
@@ -48,6 +52,7 @@ tasks:
       - infra:checkFormatting
       - web:app:checkFormatting
       - web:infra:checkFormatting
+      - web:domain-mapping:checkFormatting
       - api:impl:checkFormatting
       - api:infra:checkFormatting
 
@@ -58,6 +63,7 @@ tasks:
       - infra:fixFormatting
       - web:app:fixFormatting
       - web:infra:fixFormatting
+      - web:domain-mapping:fixFormatting
       - api:impl:fixFormatting
       - api:infra:fixFormatting
 
@@ -68,6 +74,7 @@ tasks:
       - infra:lint
       - web:app:lint
       - web:infra:lint
+      - web:domain-mapping:lint
       - api:impl:lint
       - api:infra:lint
 
@@ -77,6 +84,7 @@ tasks:
       - infra:validate
       - web:app:analyze
       - web:infra:validate
+      - web:domain-mapping:validate
       - api:infra:validate
 
   run:
