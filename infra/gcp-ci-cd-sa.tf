@@ -85,10 +85,10 @@ resource "google_project_iam_member" "cicd_sa_sa_user" {
   member  = "serviceAccount:${google_service_account.cicd_sa.email}"
 }
 
-# Grant CI/CD SA Firestore admin (create Firestore database)
-resource "google_project_iam_member" "cicd_sa_datastore_admin" {
+# Grant CI/CD SA Secret Manager admin (manage the DB connection-string secret)
+resource "google_project_iam_member" "cicd_sa_secretmanager_admin" {
   project = local.gcp_project_id
-  role    = "roles/datastore.owner"
+  role    = "roles/secretmanager.admin"
   member  = "serviceAccount:${google_service_account.cicd_sa.email}"
 }
 

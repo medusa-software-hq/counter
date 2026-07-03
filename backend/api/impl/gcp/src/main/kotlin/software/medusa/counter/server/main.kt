@@ -4,6 +4,7 @@ private const val portEnvVarName = "PORT"
 private const val clientIdEnvVarName = "GOOGLE_CLIENT_ID"
 private const val allowedDomainEnvVarName = "GOOGLE_ALLOWED_DOMAIN"
 private const val corsOriginRegexEnvVarName = "CORS_ALLOWED_ORIGIN_REGEX"
+private const val databaseUrlEnvVarName = "DATABASE_URL"
 
 fun main() {
   val port =
@@ -22,11 +23,15 @@ fun main() {
       System.getenv(corsOriginRegexEnvVarName)
           ?: error("$corsOriginRegexEnvVarName environment variable must be set")
 
+  val databaseUrl =
+      System.getenv(databaseUrlEnvVarName)
+          ?: error("$databaseUrlEnvVarName environment variable must be set")
+
   buildServer(
           originRegex = corsOriginRegex,
           port = port,
           auth = GoogleIdTokenAuthDecorator(clientId, allowedDomain),
-          counterStore = FirestoreCounterStore.build(),
+          counterStore = PostgresCounterStore.build(databaseUrl),
       )
       .start()
       .join()
