@@ -38,8 +38,20 @@ resource "google_cloud_run_v2_service" "primary" {
         name  = "CORS_ALLOWED_ORIGIN_REGEX"
         value = "https://[a-z0-9-]+\\.medusa\\.software"
       }
+
+      env {
+        name = "DATABASE_URL"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.database_url.secret_id
+            version = "latest"
+          }
+        }
+      }
     }
   }
+
+  depends_on = [google_secret_manager_secret_version.database_url]
 
   # The image is managed by CI/CD after initial creation.
   # Env vars are managed by Terraform and must not be overwritten by deploys.

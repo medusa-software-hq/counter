@@ -21,7 +21,7 @@ Browser
   -> Counter storage
 ```
 
-In production, the backend validates Google ID tokens and persists the counter in Firestore. For local development, the project swaps those pieces for a no-op auth layer and an in-memory store.
+In production, the backend validates Google ID tokens and persists the counter in Neon (serverless Postgres), accessed through SQLDelight. For local development, the project swaps those pieces for a no-op auth layer and an in-memory store.
 
 ### Application design
 
@@ -86,8 +86,8 @@ The backend has two entry points that wire the same shared service differently:
 
 - **GCP / production**
     - uses `GoogleIdTokenAuthDecorator`
-    - uses `FirestoreCounterStore`
-    - reads configuration such as port, client ID, allowed Google Workspace domain, and CORS origin regex from environment variables
+    - uses `PostgresCounterStore` (SQLDelight, backed by Neon)
+    - reads configuration such as port, client ID, allowed Google Workspace domain, CORS origin regex, and the Neon `DATABASE_URL` from environment variables
 
 - **Local development**
     - uses `NoOpAuthDecorator`
@@ -102,8 +102,12 @@ The primary persistence model is hidden behind `CounterStore`, which makes the s
 Current implementations include:
 
 - `InMemoryCounterStore` - simple local development store
-- `FirestoreCounterStore` - production store backed by Firestore transactions
-- `PostgresCounterStore` - alternative shared implementation for PostgreSQL-based deployments
+- `PostgresCounterStore` - production store backed by Neon (serverless Postgres)
+
+`PostgresCounterStore` uses **SQLDelight** for type-safe queries (generated from
+`shared/src/main/sqldelight/.../Counter.sq`) and **Flyway** for runtime schema
+migrations (`shared/src/main/resources/db/migration/`). SQLDelight owns the queries;
+Flyway owns the schema.
 
 This pattern keeps business logic independent from the underlying database choice.
 
@@ -138,9 +142,8 @@ The root Terraform project provisions shared platform resources such as:
 The backend Terraform project provisions resources required by the API, including:
 
 - Cloud Run service
-- Firestore
-- secret management
-- Neon/Postgres-related resources
+- Neon (serverless Postgres) project
+- Secret Manager secret holding the Neon connection string (injected as `DATABASE_URL`)
 
 #### Web infrastructure (`apps/web/infra/foundation/`)
 
