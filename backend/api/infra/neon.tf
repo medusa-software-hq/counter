@@ -13,9 +13,12 @@ resource "neon_project" "main" {
 # (non-pooled) endpoint so Flyway's session-level advisory lock works reliably at
 # startup; PgBouncer's transaction pooling would make that lock unreliable. The
 # per-instance Hikari pool is small and Cloud Run runs few instances, so direct
-# connections are well within Neon's limits for this workload. Prefixing the
-# Postgres URI with `jdbc:` yields a URL the PostgreSQL JDBC driver accepts
-# (credentials live in the userinfo component).
+# connections are well within Neon's limits for this workload.
+#
+# Neon returns a `postgres://…` URI, but the PostgreSQL JDBC driver only registers
+# for the `jdbc:postgresql:` scheme (a bare `jdbc:postgres:` fails with "No suitable
+# driver"). Normalize the scheme to `postgresql` and prefix `jdbc:`; credentials
+# live in the userinfo component, which the driver accepts.
 locals {
-  database_jdbc_url = "jdbc:${neon_project.main.connection_uri}"
+  database_jdbc_url = "jdbc:${replace(neon_project.main.connection_uri, "/^postgres(ql)?:/", "postgresql:")}"
 }
