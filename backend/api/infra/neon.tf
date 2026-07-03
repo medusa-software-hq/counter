@@ -10,15 +10,24 @@ resource "neon_project" "main" {
 }
 
 # JDBC connection string for the default branch/database/role. We use the direct
-# (non-pooled) endpoint so Flyway's session-level advisory lock works reliably at
-# startup; PgBouncer's transaction pooling would make that lock unreliable. The
-# per-instance Hikari pool is small and Cloud Run runs few instances, so direct
-# connections are well within Neon's limits for this workload.
+# (non-pooled) endpoint (`database_host`, not `database_host_pooler`) so Flyway's
+# session-level advisory lock works reliably at startup; PgBouncer's transaction
+# pooling would make that lock unreliable. The per-instance Hikari pool is small and
+# Cloud Run runs few instances, so direct connections are well within Neon's limits.
 #
-# Neon returns a `postgres://…` URI, but the PostgreSQL JDBC driver only registers
-# for the `jdbc:postgresql:` scheme (a bare `jdbc:postgres:` fails with "No suitable
-# driver"). Normalize the scheme to `postgresql` and prefix `jdbc:`; credentials
-# live in the userinfo component, which the driver accepts.
+# We build a native pgjdbc URL from Neon's structured attributes rather than reusing
+# its `connection_uri`. pgjdbc does NOT accept libpq-style `user:password@host`
+# userinfo (it rejects the URL in acceptsURL); credentials must be host/database in
+# the URL with user/password as query parameters. `sslmode=require` is mandatory for
+# Neon, and `urlencode` guards against special characters in the generated password.
 locals {
-  database_jdbc_url = "jdbc:${replace(neon_project.main.connection_uri, "/^postgres(ql)?:/", "postgresql:")}"
+  database_jdbc_url = join("", [
+    "jdbc:postgresql://",
+    neon_project.main.database_host,
+    "/",
+    neon_project.main.database_name,
+    "?sslmode=require",
+    "&user=", urlencode(neon_project.main.database_user),
+    "&password=", urlencode(neon_project.main.database_password),
+  ])
 }
