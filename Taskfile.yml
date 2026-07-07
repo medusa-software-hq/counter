@@ -85,6 +85,7 @@ tasks:
       - web:app:analyze
       - web:infra:validate
       - web:domain-mapping:validate
+      - backend:compile
       - api:infra:validate
 
   run:
