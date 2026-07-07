@@ -43,6 +43,6 @@ jobs:
       id-token: write
       pull-requests: write
 
-  check-api-impl:
-    name: api (implementation)
-    uses: ./.github/workflows/check-api-impl.yml
+  check-backend:
+    name: backend
+    uses: ./.github/workflows/check-backend.yml

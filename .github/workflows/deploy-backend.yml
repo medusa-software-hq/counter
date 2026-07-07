@@ -1,10 +1,11 @@
-name: Deploy API
+name: Deploy backend
 
 on:
   push:
     branches: ["trunk/*"]
     paths:
-      - "backend/api/impl/**"
+      - "backend/**"
+      - "!backend/api/infra/**"
 
   workflow_dispatch:
 
@@ -18,11 +19,11 @@ env:
   # Exact image path is arbitrary (as long as it's unique)
   IMAGE_REF: ${{ vars.GCP_AR_REPO_ENDPOINT }}/api/${{ github.sha }}
 
-  SERVICE_PATH: backend/api/impl
+  SERVICE_PATH: backend
 
 jobs:
   deploy-service:
-    name: Deploy service
+    name: Deploy backend
     runs-on: ubuntu-latest
 
     permissions:
@@ -52,7 +53,7 @@ jobs:
       - name: Build and push image
         working-directory: ${{ env.SERVICE_PATH }}
         run: |
-          ./gradlew :gcp:jib \
+          ./gradlew :api:gcp:jib \
             -Pjib.imageRef=${{ env.IMAGE_REF }} \
             -Pjib.imageTag=${{ github.sha }} \
             --stacktrace --info

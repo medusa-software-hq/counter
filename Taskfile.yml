@@ -17,9 +17,9 @@ includes:
     taskfile: apps/web/infra/domain-mapping/Taskfile.yml
     dir: apps/web/infra/domain-mapping
 
-  api:impl:
-    taskfile: backend/api/impl/Taskfile.yml
-    dir: backend/api/impl
+  backend:
+    taskfile: backend/Taskfile.yml
+    dir: backend
 
   api:infra:
     taskfile: backend/api/infra/Taskfile.yml
@@ -53,7 +53,7 @@ tasks:
       - web:app:checkFormatting
       - web:infra:checkFormatting
       - web:domain-mapping:checkFormatting
-      - api:impl:checkFormatting
+      - backend:checkFormatting
       - api:infra:checkFormatting
 
   fixFormatting-all:
@@ -64,7 +64,7 @@ tasks:
       - web:app:fixFormatting
       - web:infra:fixFormatting
       - web:domain-mapping:fixFormatting
-      - api:impl:fixFormatting
+      - backend:fixFormatting
       - api:infra:fixFormatting
 
   lint-all:
@@ -75,7 +75,7 @@ tasks:
       - web:app:lint
       - web:infra:lint
       - web:domain-mapping:lint
-      - api:impl:lint
+      - backend:lint
       - api:infra:lint
 
   analyze-all:
@@ -91,4 +91,4 @@ tasks:
     desc: Run the frontend and the API locally
     deps:
       - web:app:run
-      - api:impl:run
+      - backend:run
