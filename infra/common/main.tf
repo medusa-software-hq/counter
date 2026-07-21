@@ -17,8 +17,8 @@ locals {
   gh_repo_name         = "counter" # 🎨 TEMPLATE EJECT: Change the repo name
   gh_api_url_var_name  = "API_URL"
 
-  project_base_name = "counter" # 🎨 TEMPLATE EJECT: Choose an org-unique project base name
-  project_variant   = "v4"      # 🎨 TEMPLATE EJECT: Choose a project-unique variant name
+  project_base_name = "counter"  # 🎨 TEMPLATE EJECT: Choose an org-unique project base name
+  project_variant   = "baseline" # 🎨 TEMPLATE EJECT: Choose a project-unique variant name
 
   # Flavor subdomain under organization_domain. The web app is published at
   # `<subdomain_label>.<domain>` and the API at `api.<subdomain_label>.<domain>`.
