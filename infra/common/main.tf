@@ -32,10 +32,13 @@ locals {
   api_host_name      = "${local.api_subdomain_name}.${local.organization_domain}"
   api_url            = "https://${local.api_host_name}"
 
-  # Google OAuth 2.0 client ID
-  # https://console.cloud.google.com/auth/clients/852264381191-crah9udgr1d44tposdv348k091t2upb6.apps.googleusercontent.com?project=ms-auth-284371d2
-  # 🎨 TEMPLATE POST-EJECT: Create a new OAuth Client ID manually (🔗 https://console.cloud.google.com/auth/clients/create?project=ms-auth-284371d2) and change it here 👆
-  google_client_id = "852264381191-crah9udgr1d44tposdv348k091t2upb6.apps.googleusercontent.com"
+  # Google OAuth 2.0 client ID — project-specific Web client in this project's own
+  # GCP project (moved off the shared ms-auth project). Authorized origin is the
+  # web app's URL (https://counter-baseline.medusa.software).
+  # https://console.cloud.google.com/auth/clients/390879863874-fbuvtnt28dqj2k8po5fss3ps37d8b4f8.apps.googleusercontent.com?project=ms-counter-1175e509
+  # 🎨 TEMPLATE POST-EJECT: Create a project-specific Web OAuth Client ID (authorized
+  # origin = the web app's URL) and change it here 👆
+  google_client_id = "390879863874-fbuvtnt28dqj2k8po5fss3ps37d8b4f8.apps.googleusercontent.com"
 }
 
 output "organization_domain" {
