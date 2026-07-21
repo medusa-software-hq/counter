@@ -36,6 +36,7 @@ locals {
   check_web_domain_mapping_job_name = "web (domain mapping)"
   check_web_spa_job_name            = "web (SPA)"
   check_api_infra_job_name          = "api (infra)"
+  check_api_domain_mapping_job_name = "api (domain mapping)"
   check_api_impl_job_name           = "api (implementation)"
 }
 
@@ -103,6 +104,11 @@ resource "github_repository_ruleset" "default_branch" {
 
       required_check {
         context        = "${local.check_api_infra_job_name} / Check Terraform configuration"
+        integration_id = local.gh_actions_integration_id
+      }
+
+      required_check {
+        context        = "${local.check_api_domain_mapping_job_name} / Check Terraform configuration"
         integration_id = local.gh_actions_integration_id
       }
 

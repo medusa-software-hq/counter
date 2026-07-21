@@ -46,13 +46,10 @@ resource "github_actions_variable" "gcp_api_url" {
   repository    = data.github_repository.this.name
   variable_name = module.common.gh_api_url_var_name
 
-  # Managed manually (for now):
-  # https://github.com/medusa-software-hq/counter/settings/variables/actions/API_URL
-  value = "https://example.com/placeholder"
-
-  lifecycle {
-    ignore_changes = [value]
-  }
+  # Derived, not hand-maintained: it is the host the API's domain mapping
+  # publishes (backend/api/infra/domain-mapping), baked into the web build as
+  # VITE_API_URL.
+  value = module.common.api_url
 }
 
 # Consumed by the web frontend build (baked into the JS bundle).
