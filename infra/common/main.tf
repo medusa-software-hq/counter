@@ -3,6 +3,62 @@ terraform {
 }
 
 locals {
+  # Deployment environment, derived from the Terraform workspace. The `default`
+  # workspace is production — its state predates the prod/staging split, so it
+  # stays in place (no state migration); every other workspace is a named
+  # non-prod environment. This is the single dimension that distinguishes prod
+  # from staging across every root that imports this module.
+  environment = terraform.workspace == "default" ? "prod" : terraform.workspace
+
+  # Per-environment values. Everything *outside* this map is shared across
+  # environments (same GCP meta project, state bucket, region, org, repo, …);
+  # only what genuinely differs per environment lives here. `default`/prod
+  # resolves to exactly the values used before this split, so introducing the
+  # workspace dimension is a no-op on the prod state.
+  environment_config = {
+    prod = {
+      # The GitHub deployment Environment holding this environment's Actions
+      # variables (see .github/config). Note prod's is "production", not "prod".
+      gh_environment_name = "production"
+
+      # Suffix appended to the GCP project's *display name*. Empty for prod: its
+      # project predates the split and must not be renamed.
+      gcp_project_name_suffix = ""
+
+      # DNS/Neon-safe suffix appended to derived resource names (web/API
+      # subdomain, Neon project). Empty for prod so its subdomain and Neon
+      # project keep their pre-split names.
+      resource_name_suffix = ""
+
+      # Google OAuth 2.0 client ID — the audience of the *user* tokens this
+      # environment's API accepts, and the client its SPA signs in with. Lives in
+      # this environment's own GCP project (moved off the shared ms-auth project).
+      # https://console.cloud.google.com/auth/clients/390879863874-fbuvtnt28dqj2k8po5fss3ps37d8b4f8.apps.googleusercontent.com?project=ms-counter-1175e509
+      # 🎨 TEMPLATE POST-EJECT: Create a project-specific Web OAuth Client ID in the prod
+      # GCP project (authorized origin = the web app's URL) and change it here 👆
+      google_client_id = "390879863874-fbuvtnt28dqj2k8po5fss3ps37d8b4f8.apps.googleusercontent.com"
+    }
+    staging = {
+      gh_environment_name     = "staging"
+      gcp_project_name_suffix = " - staging"
+      resource_name_suffix    = "-staging"
+
+      # A *separate* OAuth client, whose authorized origin is staging's own
+      # domain — not a second origin bolted onto prod's client. The API
+      # authenticates a user by checking `aud` against this ID (see
+      # GoogleIdTokenAuthDecorator), so a shared client would mean a token minted
+      # through staging's SPA is indistinguishable from a production one and
+      # accepted by the production API. Staging is where not-yet-promoted code
+      # runs; it must not hold a credential production honours. The credential
+      # boundary is the environment boundary.
+      # 🎨 TEMPLATE POST-EJECT: Create a separate Web OAuth Client ID in the *staging*
+      # GCP project (its authorized origin = staging's subdomain), and change it here 👇.
+      # Blocked until the staging project exists (apply the staging workspace first).
+      google_client_id = "REPLACE_WITH_STAGING_OAUTH_CLIENT_ID.apps.googleusercontent.com"
+    }
+  }
+  selected_environment = local.environment_config[local.environment]
+
   organization_domain = "medusa.software"
 
   gcp_organization_prefix         = "ms"
@@ -13,16 +69,27 @@ locals {
   gcp_api_run_service_name = "api"
   gcp_web_run_service_name = "web"
 
-  gh_organization_name = "medusa-software-hq"
-  gh_repo_name         = "counter" # 🎨 TEMPLATE EJECT: Change the repo name
-  gh_api_url_var_name  = "API_URL"
+  # The GitHub org + repo that holds the code and runs CI/CD — the SAME for
+  # every environment (one repo, one Actions pipeline), so a flavor constant,
+  # NOT part of environment_config. Used for WIF principalSets, the `github`
+  # provider owner, and Terraform state prefixes.
+  gh_organization_name   = "medusa-software-hq"
+  gh_repo_name           = "counter" # 🎨 TEMPLATE EJECT: Change the repo name
+  gh_api_url_var_name    = "API_URL"
+  gh_default_branch_name = "trunk/v3" # 🎨 TEMPLATE EJECT: Change the default branch
 
   project_base_name = "counter"  # 🎨 TEMPLATE EJECT: Choose an org-unique project base name
   project_variant   = "baseline" # 🎨 TEMPLATE EJECT: Choose a project-unique variant name
 
-  # Flavor subdomain under organization_domain. The web app is published at
-  # `<subdomain_label>.<domain>` and the API at `api.<subdomain_label>.<domain>`.
-  subdomain_label = "${local.project_base_name}-${local.project_variant}"
+  gh_environment_name     = local.selected_environment.gh_environment_name
+  gcp_project_name_suffix = local.selected_environment.gcp_project_name_suffix
+  resource_name_suffix    = local.selected_environment.resource_name_suffix
+
+  # Subdomain under organization_domain — per environment (the suffix is empty
+  # for prod). The web app is published at `<subdomain_label>.<domain>` and the
+  # API at `api.<subdomain_label>.<domain>`; staging gets its own subdomain for
+  # free.
+  subdomain_label = "${local.project_base_name}-${local.project_variant}${local.resource_name_suffix}"
 
   # The API's public host, defined once: the domain mapping publishes it (DNS
   # record + Cloud Run mapping) and CI/CD hands it to the web build as
@@ -32,13 +99,9 @@ locals {
   api_host_name      = "${local.api_subdomain_name}.${local.organization_domain}"
   api_url            = "https://${local.api_host_name}"
 
-  # Google OAuth 2.0 client ID — project-specific Web client in this project's own
-  # GCP project (moved off the shared ms-auth project). Authorized origin is the
-  # web app's URL (https://counter-baseline.medusa.software).
-  # https://console.cloud.google.com/auth/clients/390879863874-fbuvtnt28dqj2k8po5fss3ps37d8b4f8.apps.googleusercontent.com?project=ms-counter-1175e509
-  # 🎨 TEMPLATE POST-EJECT: Create a project-specific Web OAuth Client ID (authorized
-  # origin = the web app's URL) and change it here 👆
-  google_client_id = "390879863874-fbuvtnt28dqj2k8po5fss3ps37d8b4f8.apps.googleusercontent.com"
+  # Google OAuth 2.0 client ID — per environment (see environment_config). It is
+  # the audience of the user tokens that environment's API accepts.
+  google_client_id = local.selected_environment.google_client_id
 }
 
 output "organization_domain" {
@@ -107,4 +170,24 @@ output "api_url" {
 
 output "google_client_id" {
   value = local.google_client_id
+}
+
+output "environment" {
+  value = local.environment
+}
+
+output "gh_environment_name" {
+  value = local.gh_environment_name
+}
+
+output "gh_default_branch_name" {
+  value = local.gh_default_branch_name
+}
+
+output "gcp_project_name_suffix" {
+  value = local.gcp_project_name_suffix
+}
+
+output "resource_name_suffix" {
+  value = local.resource_name_suffix
 }

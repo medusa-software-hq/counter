@@ -19,7 +19,7 @@ resource "google_project" "gcp_project" {
   org_id          = data.google_organization.gcp_organization.org_id
   billing_account = data.google_billing_account.gcp_billing_account.id
 
-  name       = "${module.common.project_base_name} - ${module.common.project_variant}"
+  name       = "${module.common.project_base_name} - ${module.common.project_variant}${module.common.gcp_project_name_suffix}"
   project_id = "${module.common.gcp_organization_prefix}-${module.common.project_base_name}-${random_id.gcp_project_random_id.hex}"
 
   auto_create_network = false
