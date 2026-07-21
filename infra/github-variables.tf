@@ -24,6 +24,9 @@ locals {
     GCP_AR_REPO_ENDPOINT     = local.gcp_ar_repo_endpoint
     GOOGLE_CLIENT_ID         = module.common.google_client_id
     GOOGLE_ALLOWED_DOMAIN    = module.common.organization_domain
+    # Client id of the "Medusa Counter Releaser" GitHub App the Publish CLI
+    # workflow authenticates as (public; the private key is a secret).
+    GH_RELEASES_CLIENT_ID = module.common.gh_releases_client_id
   }
 }
 

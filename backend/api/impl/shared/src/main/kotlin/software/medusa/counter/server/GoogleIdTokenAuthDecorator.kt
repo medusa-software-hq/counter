@@ -27,14 +27,16 @@ private val googleIssuers = setOf("https://$googleAccountsHostname", googleAccou
  * Checks:
  * - Valid signature against Google's JWKS
  * - `iss` is a known Google issuer
- * - `aud` matches [clientId]
+ * - `aud` is one of [allowedAudiences] (the web SPA client and, optionally, the CLI Desktop client
+ *   — these are distinct OAuth clients, both minted by the same organization)
  * - Token is not expired
- * - `hd` claim matches [allowedDomain]
+ * - `hd` claim matches [allowedDomain] — the hosted-domain claim is what keeps out any token whose
+ *   audience happens to match but whose subject isn't in this Workspace
  *
  * Returns HTTP 401 on any failure.
  */
 class GoogleIdTokenAuthDecorator(
-    private val clientId: String,
+    private val allowedAudiences: Set<String>,
     private val allowedDomain: String,
 ) : DecoratingHttpServiceFunction {
   companion object {
@@ -50,9 +52,11 @@ class GoogleIdTokenAuthDecorator(
 
     val keySelector = JWSVerificationKeySelector(com.nimbusds.jose.JWSAlgorithm.RS256, jwkSource)
 
+    // Audience is verified manually below: Nimbus's DefaultJWTClaimsVerifier can only exact-match a
+    // single audience, but we accept any of a set (web + CLI clients).
     val claimsVerifier =
         DefaultJWTClaimsVerifier<SecurityContext>(
-            com.nimbusds.jwt.JWTClaimsSet.Builder().audience(clientId).build(),
+            com.nimbusds.jwt.JWTClaimsSet.Builder().build(),
             setOf("sub", "email", "iat", "exp"),
         )
 
@@ -76,8 +80,11 @@ class GoogleIdTokenAuthDecorator(
           return unauthorized
         }
 
-    // Verify issuer manually (nimbus claimsVerifier checks aud/exp/required fields).
+    // Verify issuer manually (nimbus claimsVerifier checks exp/required fields).
     if (claims.issuer !in googleIssuers) return unauthorized
+
+    // Accept a token minted by any of our OAuth clients (web SPA or CLI Desktop client).
+    if ((claims.audience ?: emptyList()).none { it in allowedAudiences }) return unauthorized
 
     // Enforce hosted domain.
     val hd = claims.getStringClaim("hd")
