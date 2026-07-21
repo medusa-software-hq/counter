@@ -51,10 +51,12 @@ locals {
       # accepted by the production API. Staging is where not-yet-promoted code
       # runs; it must not hold a credential production honours. The credential
       # boundary is the environment boundary.
+      # Web client in the staging GCP project (ms-counter-f7f40f25), authorized
+      # origin https://counter-baseline-staging.medusa.software.
+      # https://console.cloud.google.com/auth/clients/1099281545285-nu3h1ifa0i3bfdmsbac6vm3d112squ6e.apps.googleusercontent.com?project=ms-counter-f7f40f25
       # 🎨 TEMPLATE POST-EJECT: Create a separate Web OAuth Client ID in the *staging*
       # GCP project (its authorized origin = staging's subdomain), and change it here 👇.
-      # Blocked until the staging project exists (apply the staging workspace first).
-      google_client_id = "REPLACE_WITH_STAGING_OAUTH_CLIENT_ID.apps.googleusercontent.com"
+      google_client_id = "1099281545285-nu3h1ifa0i3bfdmsbac6vm3d112squ6e.apps.googleusercontent.com"
     }
   }
   selected_environment = local.environment_config[local.environment]
