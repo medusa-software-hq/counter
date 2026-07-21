@@ -18,12 +18,6 @@ jobs:
   check-web-infra:
     name: web (infra)
     uses: ./.github/workflows/check-web-infra.yml
-    secrets: inherit
-
-    permissions:
-      contents: read
-      id-token: write
-      pull-requests: write
 
   check-web-domain-mapping:
     name: web (domain mapping)
@@ -36,12 +30,6 @@ jobs:
   check-api-infra:
     name: api (infra)
     uses: ./.github/workflows/check-api-infra.yml
-    secrets: inherit
-
-    permissions:
-      contents: read
-      id-token: write
-      pull-requests: write
 
   check-api-domain-mapping:
     name: api (domain mapping)
