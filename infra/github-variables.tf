@@ -1,22 +1,17 @@
 # Actions variables consumed by CI/CD jobs.
 #
-# Migration in flight: the end state is that *both* environments read
-# Environment-scoped variables, so prod and staging each get their own project
-# id, API URL and CI/CD identity. It is staged so prod never loses its variable
-# source:
+# Environment-scoped: prod and staging each get their own project id, API URL,
+# CI/CD identity and Artifact Registry. A workflow job's `environment:` is what
+# makes its `vars.*` resolve to the right environment's values; each Terraform
+# workspace writes only its own environment (the prod workspace fills
+# `production`, the staging workspace fills `staging`).
 #
-#   1. (this change) add Environment-scoped variables for both environments, and
-#      keep the repo-level ones — workflows declare no `environment:` yet, so
-#      they still read the repo-level values and prod is untouched;
-#   2. flip the workflows to a [production, staging] matrix with `environment:`;
-#   3. drop the repo-level variables below, once nothing reads them.
-#
-# The repo-level variables are prod-only: they are a single repo-wide namespace,
-# so a staging-workspace apply must never write staging values into them.
+# GCP_CICD_WI_PROVIDER_NAME, GCP_DOMAIN_MAPPER_SA_EMAIL and CLOUDFLARE_ZONE_ID
+# are absent here on purpose: the Workload Identity pool, the shared
+# domain-mapper SA and the Cloudflare zone are shared across environments, so
+# both read the same repository-level values (set outside this root).
 
 locals {
-  is_prod = module.common.environment == "prod"
-
   # Everything the CI/CD jobs read, per environment.
   cicd_environment_variables = {
     API_URL                  = module.common.api_url
@@ -32,10 +27,6 @@ locals {
   }
 }
 
-# region Environment-scoped variables (the destination of the migration)
-
-# Each workspace writes only its own environment's variables: the prod workspace
-# fills `production`, the staging workspace fills `staging`.
 resource "github_actions_environment_variable" "cicd" {
   for_each = local.cicd_environment_variables
 
@@ -44,149 +35,3 @@ resource "github_actions_environment_variable" "cicd" {
   variable_name = each.key
   value         = each.value
 }
-
-# endregion
-
-# region Repo-level variables (legacy — removed in step 3 of the migration)
-
-moved {
-  from = github_actions_variable.gcp_project_id
-  to   = github_actions_variable.gcp_project_id[0]
-}
-
-resource "github_actions_variable" "gcp_project_id" {
-  count = local.is_prod ? 1 : 0
-
-  repository    = data.github_repository.this.name
-  variable_name = "GCP_PROJECT_ID"
-  value         = google_project.gcp_project.project_id
-}
-
-moved {
-  from = github_actions_variable.gcp_primary_location
-  to   = github_actions_variable.gcp_primary_location[0]
-}
-
-resource "github_actions_variable" "gcp_primary_location" {
-  count = local.is_prod ? 1 : 0
-
-  repository    = data.github_repository.this.name
-  variable_name = "GCP_PRIMARY_LOCATION"
-  value         = module.common.gcp_primary_location
-}
-
-moved {
-  from = github_actions_variable.gcp_api_run_service_name
-  to   = github_actions_variable.gcp_api_run_service_name[0]
-}
-
-resource "github_actions_variable" "gcp_api_run_service_name" {
-  count = local.is_prod ? 1 : 0
-
-  repository    = data.github_repository.this.name
-  variable_name = "GCP_API_RUN_SERVICE_NAME"
-  value         = module.common.gcp_api_run_service_name
-}
-
-moved {
-  from = github_actions_variable.gcp_web_run_service_name
-  to   = github_actions_variable.gcp_web_run_service_name[0]
-}
-
-resource "github_actions_variable" "gcp_web_run_service_name" {
-  count = local.is_prod ? 1 : 0
-
-  repository    = data.github_repository.this.name
-  variable_name = "GCP_WEB_RUN_SERVICE_NAME"
-  value         = module.common.gcp_web_run_service_name
-}
-
-moved {
-  from = github_actions_variable.gcp_cicd_sa_email
-  to   = github_actions_variable.gcp_cicd_sa_email[0]
-}
-
-resource "github_actions_variable" "gcp_cicd_sa_email" {
-  count = local.is_prod ? 1 : 0
-
-  repository    = data.github_repository.this.name
-  variable_name = "GCP_CICD_SA_EMAIL"
-  value         = google_service_account.cicd_sa.email
-}
-
-moved {
-  from = github_actions_variable.gcp_ar_repo_hostname
-  to   = github_actions_variable.gcp_ar_repo_hostname[0]
-}
-
-resource "github_actions_variable" "gcp_ar_repo_hostname" {
-  count = local.is_prod ? 1 : 0
-
-  repository    = data.github_repository.this.name
-  variable_name = "GCP_AR_REPO_HOSTNAME"
-  value         = split("/", google_artifact_registry_repository.primary.registry_uri)[0]
-}
-
-moved {
-  from = github_actions_variable.gcp_ar_repo_endpoint
-  to   = github_actions_variable.gcp_ar_repo_endpoint[0]
-}
-
-resource "github_actions_variable" "gcp_ar_repo_endpoint" {
-  count = local.is_prod ? 1 : 0
-
-  repository    = data.github_repository.this.name
-  variable_name = "GCP_AR_REPO_ENDPOINT"
-  value         = local.gcp_ar_repo_endpoint
-}
-
-moved {
-  from = github_actions_variable.gcp_api_url
-  to   = github_actions_variable.gcp_api_url[0]
-}
-
-resource "github_actions_variable" "gcp_api_url" {
-  count = local.is_prod ? 1 : 0
-
-  repository    = data.github_repository.this.name
-  variable_name = module.common.gh_api_url_var_name
-
-  # Derived, not hand-maintained: it is the host the API's domain mapping
-  # publishes (backend/api/infra/domain-mapping), baked into the web build as
-  # VITE_API_URL.
-  value = module.common.api_url
-}
-
-moved {
-  from = github_actions_variable.google_client_id
-  to   = github_actions_variable.google_client_id[0]
-}
-
-# Consumed by the web frontend build (baked into the JS bundle).
-resource "github_actions_variable" "google_client_id" {
-  count = local.is_prod ? 1 : 0
-
-  repository    = data.github_repository.this.name
-  variable_name = "GOOGLE_CLIENT_ID"
-  value         = module.common.google_client_id
-}
-
-moved {
-  from = github_actions_variable.google_allowed_domain
-  to   = github_actions_variable.google_allowed_domain[0]
-}
-
-resource "github_actions_variable" "google_allowed_domain" {
-  count = local.is_prod ? 1 : 0
-
-  repository    = data.github_repository.this.name
-  variable_name = "GOOGLE_ALLOWED_DOMAIN"
-  value         = module.common.organization_domain
-}
-
-# endregion
-
-# GCP_CICD_WI_PROVIDER_NAME, GCP_DOMAIN_MAPPER_SA_EMAIL and CLOUDFLARE_ZONE_ID
-# are absent here on purpose: the Workload Identity pool, the shared
-# domain-mapper SA and the Cloudflare zone are shared across environments, so
-# both read the same repository-level values (set outside this root).
