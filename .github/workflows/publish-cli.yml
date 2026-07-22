@@ -70,7 +70,7 @@ jobs:
             --notes "Built from ${GITHUB_REPOSITORY}@${GITHUB_SHA}" \
             "${JAR}"
 
-      - uses: astral-sh/setup-uv@v8
+      - uses: astral-sh/setup-uv@v8.2.0
 
       - name: Update Homebrew formula
         working-directory: cli/tools/update-formula
