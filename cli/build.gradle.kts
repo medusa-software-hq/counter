@@ -26,24 +26,29 @@ application {
   applicationDefaultJvmArgs = listOf("--enable-native-access=ALL-UNNAMED")
 }
 
-// Bake the CLI OAuth client secret + API base URL into the fat jar as a resource. The Publish CLI
-// workflow passes them via `-PcliOauthClientSecret` / `-PcliApiBaseUrl` (from an Actions secret and
-// variable). Absent locally → empty values, and Config falls back to env vars / the prod default,
-// so dev builds still work. Neither value is ever committed.
+// Bake the per-environment OAuth client secrets into the fat jar as a resource. The Publish CLI
+// workflow passes them via `-PcliOauthClientSecret` (prod) / `-PcliStagingOauthClientSecret`
+// (staging), from Actions secrets. Absent locally → empty values, and each Environment falls back
+// to
+// its `oauthClientSecretEnvVar`, so dev builds still work. Backend URLs + client ids are NOT baked
+// —
+// they're deterministic public source constants on Environment. Neither secret is ever committed.
 val cliBuildConfigDir = layout.buildDirectory.dir("generated/cliBuildConfig")
 
 val generateCliBuildConfig by tasks.registering {
-  val clientSecret = providers.gradleProperty("cliOauthClientSecret").orElse("")
-  val apiBaseUrl = providers.gradleProperty("cliApiBaseUrl").orElse("")
-  inputs.property("clientSecret", clientSecret)
-  inputs.property("apiBaseUrl", apiBaseUrl)
+  val prodSecret = providers.gradleProperty("cliOauthClientSecret").orElse("")
+  val stagingSecret = providers.gradleProperty("cliStagingOauthClientSecret").orElse("")
+  inputs.property("prodSecret", prodSecret)
+  inputs.property("stagingSecret", stagingSecret)
   outputs.dir(cliBuildConfigDir)
   doLast {
     val file = cliBuildConfigDir.get().file("counter-cli-build.properties").asFile
     file.parentFile.mkdirs()
-    // Both values are properties-safe (a `GOCSPX-…` secret and an https URL — `:` and `/` are fine
-    // in a value). Written by hand to avoid Properties.store's date comment.
-    file.writeText("oauthClientSecret=${clientSecret.get()}\napiBaseUrl=${apiBaseUrl.get()}\n")
+    // GOCSPX-… secrets are properties-safe. Written by hand to avoid Properties.store's date
+    // comment.
+    file.writeText(
+        "oauthClientSecret=${prodSecret.get()}\nstagingOauthClientSecret=${stagingSecret.get()}\n"
+    )
   }
 }
 
