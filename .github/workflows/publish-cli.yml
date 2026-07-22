@@ -36,16 +36,18 @@ jobs:
 
       - name: Build fat jar
         working-directory: cli
-        # Bake the CLI OAuth client secret + API base URL into the jar (see CounterConfig). The
-        # secret is non-confidential for a Desktop OAuth client, but kept out of source so GitHub's
-        # push protection doesn't fight us; API_URL is the same variable the SPA builds against.
+        # Bake the per-environment OAuth client secrets into the jar (see Environment). They're
+        # non-confidential for a Desktop OAuth client, but kept out of source so GitHub's push
+        # protection doesn't fight us. Backend URLs + client ids are NOT baked — they're
+        # deterministic public source constants. The staging secret is optional: if unset it bakes
+        # empty, and `COUNTER_ENVIRONMENT=staging ms-counter login` reports that cleanly.
         env:
           CLI_OAUTH_CLIENT_SECRET: ${{ secrets.COUNTER_CLI_OAUTH_CLIENT_SECRET }}
-          CLI_API_BASE_URL: ${{ vars.API_URL }}
+          CLI_STAGING_OAUTH_CLIENT_SECRET: ${{ secrets.COUNTER_CLI_OAUTH_CLIENT_SECRET_STAGING }}
         run: |
           ./gradlew shadowJar \
             -PcliOauthClientSecret="$CLI_OAUTH_CLIENT_SECRET" \
-            -PcliApiBaseUrl="$CLI_API_BASE_URL"
+            -PcliStagingOauthClientSecret="$CLI_STAGING_OAUTH_CLIENT_SECRET"
           echo "JAR=$GITHUB_WORKSPACE/cli/build/libs/counter-cli.jar" >> $GITHUB_ENV
           echo "VERSION=0.0.${{ github.run_number }}" >> $GITHUB_ENV
 
@@ -68,7 +70,7 @@ jobs:
             --notes "Built from ${GITHUB_REPOSITORY}@${GITHUB_SHA}" \
             "${JAR}"
 
-      - uses: astral-sh/setup-uv@v8
+      - uses: astral-sh/setup-uv@v8.2.0
 
       - name: Update Homebrew formula
         working-directory: cli/tools/update-formula

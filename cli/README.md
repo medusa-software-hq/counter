@@ -34,17 +34,36 @@ accepts it because its audience is the counter CLI's Desktop OAuth client (one o
 the API's allowed audiences) and it carries the `medusa.software` hosted-domain
 claim.
 
+## Environments
+
+The CLI runs against **one environment per invocation**, chosen once by
+`COUNTER_ENVIRONMENT` (`AWS_PROFILE`-style — no per-command flag). Absent → prod.
+Each environment has its **own** partitioned session under
+`~/.config/ms-counter/<env>/`, its own backend, and its own Desktop OAuth client,
+so prod and staging can never share credentials. Non-prod prints a dim marker
+(`[staging]`) to stderr.
+
+```
+ms-counter increment                              # prod (default)
+COUNTER_ENVIRONMENT=staging ms-counter increment  # staging (needs the staging OAuth secret)
+```
+
 ## Local development
 
-The CLI talks to the prod API by default. Point it elsewhere with:
+Point the CLI at a local backend with `COUNTER_ENVIRONMENT=local`, supplying the
+config dir and port:
 
 ```
-COUNTER_API_URL=http://localhost:8081 ms-counter get
+COUNTER_ENVIRONMENT=local \
+COUNTER_LOCAL_CONFIG_PATH=/tmp/ms-counter-local \
+COUNTER_API_LOCAL_PORT=8081 \
+  ms-counter get
 ```
 
-The local backend uses no-op auth, so `get`/`increment`/`decrement` work against
-it without `login`. A local build has no OAuth client secret baked in; set
-`COUNTER_CLI_OAUTH_CLIENT_SECRET` (the Desktop client's secret) if you need
+The local backend uses no-op auth, so `get`/`increment`/`decrement` work without
+`login` (the CLI still attaches a token; the no-op decorator ignores it). A local
+build has no OAuth client secret baked in; set the per-env secret env var
+(`COUNTER_CLI_OAUTH_CLIENT_SECRET` for prod, `…_STAGING` for staging) if you need
 `login` to run against a real environment from a dev build.
 
 Common tasks (via [Task](https://taskfile.dev)):

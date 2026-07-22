@@ -41,7 +41,7 @@ locals {
       # Google OAuth 2.0 *Desktop* client ID — what the `ms-counter` CLI signs in
       # with (loopback + PKCE). A second accepted audience alongside google_client_id
       # (see GoogleIdTokenAuthDecorator's setOfNotNull). Kept in sync with the CLI's
-      # CounterConfig.CLIENT_ID. Its non-confidential secret is baked at publish.
+      # Environment.Prod.oauthClientId. Its non-confidential secret is baked at publish.
       # https://console.cloud.google.com/auth/clients/390879863874-2lni09664lo24g44kakjceu2j7s164nr.apps.googleusercontent.com?project=ms-counter-1175e509
       # 🎨 TEMPLATE POST-EJECT: Create a Desktop OAuth Client ID in the prod GCP project
       # and change it here 👆
@@ -68,8 +68,9 @@ locals {
       google_client_id = "1099281545285-nu3h1ifa0i3bfdmsbac6vm3d112squ6e.apps.googleusercontent.com"
 
       # Staging's own Desktop OAuth client (same credential-boundary reasoning as
-      # google_client_id above). The published CLI targets prod; staging use is via
-      # the COUNTER_API_URL env override + this client.
+      # google_client_id above). The CLI reaches staging via COUNTER_ENVIRONMENT=staging
+      # (see the CLI's Environment.Staging); its secret is baked from a separate
+      # COUNTER_CLI_OAUTH_CLIENT_SECRET_STAGING Actions secret.
       # https://console.cloud.google.com/auth/clients/1099281545285-smp4hh6b1rec63qgblp6apgbe534kpdd.apps.googleusercontent.com?project=ms-counter-f7f40f25
       cli_client_id = "1099281545285-smp4hh6b1rec63qgblp6apgbe534kpdd.apps.googleusercontent.com"
     }

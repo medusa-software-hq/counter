@@ -173,10 +173,10 @@ internal fun openInBrowser(url: String): Boolean {
   return runCatching { ProcessBuilder(command).inheritIO().start() }.isSuccess
 }
 
-/** Drives the human OAuth sign-in and token refresh. */
+/** Drives the human OAuth sign-in and token refresh for a given environment's Desktop client. */
 class CounterOAuth(
+    private val clientId: String,
     private val clientSecret: String,
-    private val clientId: String = CounterConfig.CLIENT_ID,
     private val httpClient: HttpClient = HttpClient.newHttpClient(),
     private val tokenEndpointUrl: String = tokenEndpoint,
 ) {
