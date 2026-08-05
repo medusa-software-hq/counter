@@ -1,4 +1,4 @@
-name: Check web SPA
+name: Check Web app implementation
 
 on:
   workflow_call:

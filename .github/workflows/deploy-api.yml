@@ -98,7 +98,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    uses: ./.github/workflows/check-staging-smoke.yml
+    uses: ./.github/workflows/smoke-staging.yml
 
   deploy-prod:
     name: Deploy prod (promote)
