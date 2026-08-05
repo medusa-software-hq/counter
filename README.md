@@ -27,7 +27,7 @@ In production, the backend validates Google ID tokens and persists the counter i
 
 The repository is organized as a multi-module project with clear separation between transport, business logic, and infrastructure:
 
-- `apps/web/spa/frontend/` - browser application
+- `web-app/frontend/` - browser application
 - `backend/api/shared/` - shared backend code
 - `backend/api/gcp/` - production backend entry point
 - `backend/api/local/` - local backend entry point
@@ -145,14 +145,14 @@ The backend Terraform project provisions resources required by the API, includin
 - Neon (serverless Postgres) project
 - Secret Manager secret holding the Neon connection string (injected as `DATABASE_URL`)
 
-#### Web infrastructure (`apps/web/infra/foundation/`)
+#### Web infrastructure (`web-app/infra/foundation/`)
 
 The web foundation project provisions the frontend runtime, including:
 
 - Cloud Run service for the SPA
 - IAP-related configuration
 
-#### Web domain mapping (`apps/web/infra/domain-mapping/`)
+#### Web domain mapping (`web-app/infra/domain-mapping/`)
 
 This project manages public routing for the web app, including:
 

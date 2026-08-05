@@ -16,7 +16,7 @@ on:
   push:
     branches: ["trunk/*"]
     paths:
-      - "apps/web/spa/**"
+      - "web-app/**"
       - "proto/**"
 
   workflow_dispatch:
@@ -34,7 +34,7 @@ env:
   # push staging's image into production's Artifact Registry. It is resolved in a
   # step below.
 
-  APP_PATH: apps/web/spa
+  APP_PATH: web-app
 
 jobs:
   deploy-staging:
