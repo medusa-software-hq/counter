@@ -22,12 +22,12 @@ includes:
     dir: backend/api
 
   api:infra:
-    taskfile: backend/api/infra/Taskfile.yml
-    dir: backend/api/infra
+    taskfile: backend/infra/Taskfile.yml
+    dir: backend/infra
 
   api:domain-mapping:
-    taskfile: backend/api/infra/domain-mapping/Taskfile.yml
-    dir: backend/api/infra/domain-mapping
+    taskfile: backend/infra/domain-mapping/Taskfile.yml
+    dir: backend/infra/domain-mapping
 
   cli:
     taskfile: cli/Taskfile.yml

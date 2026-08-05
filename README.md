@@ -137,7 +137,7 @@ The root Terraform project provisions shared platform resources such as:
 - GitHub integration
 - shared DNS/domain mapping support
 
-#### Backend infrastructure (`backend/api/infra/`)
+#### Backend infrastructure (`backend/infra/`)
 
 The backend Terraform project provisions resources required by the API, including:
 
