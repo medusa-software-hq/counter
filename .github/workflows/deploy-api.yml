@@ -9,7 +9,7 @@ on:
   push:
     branches: ["trunk/*"]
     paths:
-      - "backend/api/impl/**"
+      - "backend/api/**"
 
   workflow_dispatch:
 
@@ -27,7 +27,7 @@ env:
   # push staging's image into production's Artifact Registry. It is resolved in a
   # step below.
 
-  SERVICE_PATH: backend/api/impl
+  SERVICE_PATH: backend/api
 
 jobs:
   deploy-staging:

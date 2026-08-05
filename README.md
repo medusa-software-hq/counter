@@ -28,9 +28,9 @@ In production, the backend validates Google ID tokens and persists the counter i
 The repository is organized as a multi-module project with clear separation between transport, business logic, and infrastructure:
 
 - `apps/web/spa/frontend/` - browser application
-- `backend/api/impl/shared/` - shared backend code
-- `backend/api/impl/gcp/` - production backend entry point
-- `backend/api/impl/local/` - local backend entry point
+- `backend/api/shared/` - shared backend code
+- `backend/api/gcp/` - production backend entry point
+- `backend/api/local/` - local backend entry point
 - `proto/` - gRPC and protobuf definitions
 - `infra/` and per-module `infra/` directories - Terraform configuration
 
