@@ -1,4 +1,4 @@
-name: Deploy web SPA
+name: Deploy Web app
 
 # Phased promotion of the web SPA: deploy staging → smoke → deploy prod, in one
 # run.
@@ -109,7 +109,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    uses: ./.github/workflows/check-staging-smoke.yml
+    uses: ./.github/workflows/smoke-staging.yml
 
   deploy-prod:
     name: Deploy prod (promote)

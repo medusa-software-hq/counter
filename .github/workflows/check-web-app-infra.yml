@@ -1,4 +1,4 @@
-name: Check web domain mapping
+name: Check Web app infra
 
 on:
   workflow_call:
@@ -30,17 +30,19 @@ jobs:
       - uses: terraform-linters/setup-tflint@v6.2.2
 
       - name: Check formatting
-        working-directory: web-app/infra/domain-mapping
+        working-directory: web-app/infra/foundation
         run: terraform fmt -check -recursive
 
       - name: Lint Terraform configuration
-        working-directory: web-app/infra/domain-mapping
+        working-directory: web-app/infra/foundation
         run: tflint --recursive
 
-      # No GCP auth / plan here on purpose: keeps the shared domain-mapper SA
-      # off pull-request runs. The real apply happens trunk-only.
+      # No GCP auth / plan here on purpose: post prod/staging split the CI/CD
+      # identity and project id are environment-scoped (trunk-gated), so a PR
+      # can't authenticate to plan. Validate catches configuration errors; the
+      # real plan+apply happens per environment on trunk (see Apply web infra).
       - name: Validate Terraform configuration
-        working-directory: web-app/infra/domain-mapping
+        working-directory: web-app/infra/foundation
         run: |
           terraform init -backend=false
           terraform validate

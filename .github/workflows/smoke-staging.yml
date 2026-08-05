@@ -1,4 +1,4 @@
-name: Check staging smoke
+name: Smoke-test staging
 
 # Post-deploy smoke against the deployed staging environment. workflow_call so
 # the promotion workflows can wire it as the gate between the staging and prod
