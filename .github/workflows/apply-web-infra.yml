@@ -4,7 +4,7 @@ on:
   push:
     branches: ["trunk/*"]
     paths:
-      - "apps/web/infra/foundation/**"
+      - "web-app/infra/foundation/**"
 
   workflow_dispatch:
 
@@ -58,7 +58,7 @@ jobs:
           terraform_version: ~> ${{ env.TERRAFORM_VERSION }}
 
       - name: Apply Terraform configuration
-        working-directory: apps/web/infra/foundation
+        working-directory: web-app/infra/foundation
         env:
           TF_VAR_gcp_project_id: ${{ vars.GCP_PROJECT_ID }}
         run: |
