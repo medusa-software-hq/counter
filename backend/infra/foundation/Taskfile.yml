@@ -4,13 +4,13 @@ version: '3'
   - '**/*.tf'
 
 tasks:
-  checkFormatting:
+  fmt:check:
     desc: Check Terraform formatting
     sources: *terraformSources
     cmds:
       - terraform fmt -check -recursive
 
-  fixFormatting:
+  fmt:fix:
     desc: Fix Terraform formatting
     sources: *terraformSources
     cmds:

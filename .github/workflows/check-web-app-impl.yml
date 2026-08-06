@@ -35,7 +35,7 @@ jobs:
       - uses: go-task/setup-task@v2
 
       - name: Check formatting and lint
-        run: task checkFormatting lint
+        run: task fmt:check lint
         working-directory: ${{ env.FRONTEND_PATH }}
 
       - name: Test
@@ -60,7 +60,7 @@ jobs:
       - uses: go-task/setup-task@v2
 
       - name: Check formatting
-        run: task caddy:checkFormatting
+        run: task caddy:fmt:check
         working-directory: ${{ env.APP_PATH }}
 
       - name: Validate

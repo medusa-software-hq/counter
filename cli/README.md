@@ -69,8 +69,8 @@ build has no OAuth client secret baked in; set the per-env secret env var
 Common tasks (via [Task](https://taskfile.dev)):
 
 ```
-task cli:compile      # compile
-task cli:test         # unit tests
-task cli:lint         # detekt
-task cli:run -- get   # build + run locally
+task cli:build         # compile
+task cli:test          # unit tests
+task cli:lint          # detekt
+task cli:run -- get    # build + run locally
 ```

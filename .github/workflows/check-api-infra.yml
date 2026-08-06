@@ -30,11 +30,11 @@ jobs:
       - uses: terraform-linters/setup-tflint@v6.2.2
 
       - name: Check formatting
-        working-directory: backend/infra
+        working-directory: backend/infra/foundation
         run: terraform fmt -check -recursive
 
       - name: Lint Terraform configuration
-        working-directory: backend/infra
+        working-directory: backend/infra/foundation
         run: tflint --recursive
 
       # No GCP auth / plan here on purpose: post prod/staging split the CI/CD
@@ -42,7 +42,7 @@ jobs:
       # can't authenticate to plan. Validate catches configuration errors; the
       # real plan+apply happens per environment on trunk (see Apply API infra).
       - name: Validate Terraform configuration
-        working-directory: backend/infra
+        working-directory: backend/infra/foundation
         run: |
           terraform init -backend=false
           terraform validate

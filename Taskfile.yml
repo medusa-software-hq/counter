@@ -5,15 +5,15 @@ includes:
     taskfile: infra/Taskfile.yml
     dir: infra
 
-  web:app:
+  web-app:
     taskfile: web-app/Taskfile.yml
     dir: web-app
 
-  web:infra:
+  web-app:infra:foundation:
     taskfile: web-app/infra/foundation/Taskfile.yml
     dir: web-app/infra/foundation
 
-  web:domain-mapping:
+  web-app:infra:domain-mapping:
     taskfile: web-app/infra/domain-mapping/Taskfile.yml
     dir: web-app/infra/domain-mapping
 
@@ -21,11 +21,11 @@ includes:
     taskfile: backend/api/Taskfile.yml
     dir: backend/api
 
-  api:infra:
-    taskfile: backend/infra/Taskfile.yml
-    dir: backend/infra
+  api:infra:foundation:
+    taskfile: backend/infra/foundation/Taskfile.yml
+    dir: backend/infra/foundation
 
-  api:domain-mapping:
+  api:infra:domain-mapping:
     taskfile: backend/infra/domain-mapping/Taskfile.yml
     dir: backend/infra/domain-mapping
 
@@ -34,78 +34,78 @@ includes:
     dir: cli
 
 tasks:
-  github-ci:lint:
+  github:lint:
     desc: Lint GitHub workflows
     sources:
       - '.github/workflows/*.yml'
     cmds:
       - github-ci lint
 
-  github-ci:fixLint:
+  github:lint:fix:
     desc: Fix lint issues in GitHub workflows
     sources:
       - '.github/workflows/*.yml'
     cmds:
       - github-ci lint --fix
 
-  github-ci:upgrade:
+  github:upgrade:
     desc: Upgrade GitHub workflow actions to the latest versions
     cmds:
       - github-ci upgrade
 
-  checkFormatting-all:
+  all:fmt:check:
     desc: Check formatting for the entire codebase
     deps:
-      - github-ci:lint
-      - infra:checkFormatting
-      - web:app:checkFormatting
-      - web:infra:checkFormatting
-      - web:domain-mapping:checkFormatting
-      - api:impl:checkFormatting
-      - api:infra:checkFormatting
-      - api:domain-mapping:checkFormatting
-      - cli:checkFormatting
+      - github:lint
+      - infra:fmt:check
+      - web-app:fmt:check
+      - web-app:infra:foundation:fmt:check
+      - web-app:infra:domain-mapping:fmt:check
+      - api:impl:fmt:check
+      - api:infra:foundation:fmt:check
+      - api:infra:domain-mapping:fmt:check
+      - cli:fmt:check
 
-  fixFormatting-all:
+  all:fmt:fix:
     desc: Fix formatting for the entire codebase
     deps:
-      - github-ci:fixLint
-      - infra:fixFormatting
-      - web:app:fixFormatting
-      - web:infra:fixFormatting
-      - web:domain-mapping:fixFormatting
-      - api:impl:fixFormatting
-      - api:infra:fixFormatting
-      - api:domain-mapping:fixFormatting
-      - cli:fixFormatting
+      - github:lint:fix
+      - infra:fmt:fix
+      - web-app:fmt:fix
+      - web-app:infra:foundation:fmt:fix
+      - web-app:infra:domain-mapping:fmt:fix
+      - api:impl:fmt:fix
+      - api:infra:foundation:fmt:fix
+      - api:infra:domain-mapping:fmt:fix
+      - cli:fmt:fix
 
-  lint-all:
+  all:lint:
     desc: Lint the entire codebase
     deps:
-      - github-ci:lint
+      - github:lint
       - infra:lint
-      - web:app:lint
-      - web:infra:lint
-      - web:domain-mapping:lint
+      - web-app:lint
+      - web-app:infra:foundation:lint
+      - web-app:infra:domain-mapping:lint
       - api:impl:lint
-      - api:infra:lint
-      - api:domain-mapping:lint
+      - api:infra:foundation:lint
+      - api:infra:domain-mapping:lint
       - cli:lint
 
-  analyze-all:
+  all:analyze:
     desc: Analyze the entire codebase
     deps:
       - infra:validate
-      - web:app:analyze
-      - web:infra:validate
-      - web:domain-mapping:validate
-      - api:infra:validate
-      - api:domain-mapping:validate
-      - cli:compile
+      - web-app:analyze
+      - web-app:infra:foundation:validate
+      - web-app:infra:domain-mapping:validate
+      - api:infra:foundation:validate
+      - api:infra:domain-mapping:validate
+      - cli:build
       - cli:test
 
   run:
     desc: Run the frontend and the API locally
     deps:
-      - web:app:run
+      - web-app:run
       - api:impl:run
