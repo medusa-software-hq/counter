@@ -30,7 +30,7 @@ jobs:
       - uses: go-task/setup-task@v2
 
       - name: Check formatting
-        run: task checkFormatting
+        run: task fmt:check
         working-directory: ${{ env.SERVICE_PATH }}
 
       - name: Lint
@@ -38,7 +38,7 @@ jobs:
         working-directory: ${{ env.SERVICE_PATH }}
 
       - name: Compile
-        run: task compile
+        run: task build
         working-directory: ${{ env.SERVICE_PATH }}
 
       - name: Test

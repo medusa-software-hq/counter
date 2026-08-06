@@ -5,13 +5,13 @@ version: '3'
   - '**/*.kts'
 
 tasks:
-  checkFormatting:
+  fmt:check:
     desc: Check Kotlin formatting
     sources: *kotlinSources
     cmds:
       - ./gradlew ktfmtCheck
 
-  fixFormatting:
+  fmt:fix:
     desc: Fix Kotlin formatting
     sources: *kotlinSources
     cmds:
@@ -23,7 +23,7 @@ tasks:
     cmds:
       - ./gradlew detekt
 
-  compile:
+  build:
     desc: Compile the Kotlin sources
     sources: *kotlinSources
     cmds:

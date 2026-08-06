@@ -9,13 +9,13 @@ includes:
     dir: frontend
 
 tasks:
-  caddy:checkFormatting:
+  caddy:fmt:check:
     desc: Check Caddyfile formatting
     sources: *caddySources
     cmds:
       - caddy fmt --diff Caddyfile
 
-  caddy:fixFormatting:
+  caddy:fmt:fix:
     desc: Fix Caddyfile formatting
     sources: *caddySources
     cmds:
@@ -27,13 +27,13 @@ tasks:
     cmds:
       - caddy validate --config Caddyfile
 
-  checkFormatting:
+  fmt:check:
     desc: Check formatting (frontend + Caddyfile)
-    deps: [frontend:checkFormatting, caddy:checkFormatting]
+    deps: [frontend:fmt:check, caddy:fmt:check]
 
-  fixFormatting:
+  fmt:fix:
     desc: Fix formatting (frontend + Caddyfile)
-    deps: [frontend:fixFormatting, caddy:fixFormatting]
+    deps: [frontend:fmt:fix, caddy:fmt:fix]
 
   lint:
     desc: Lint the app sources
