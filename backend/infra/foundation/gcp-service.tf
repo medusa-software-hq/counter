@@ -25,15 +25,24 @@ resource "google_cloud_run_v2_service" "primary" {
       }
 
       env {
+        name  = "GOOGLE_WEB_CLIENT_ID"
+        value = module.common.google_web_client_id
+      }
+
+      # Transitional duplicate: the previously-deployed image still reads GOOGLE_CLIENT_ID.
+      # Keeping both names present makes the rename deploy safely across the non-atomic
+      # Terraform-env vs. separate-image-deploy split (see Farm's trunk break). Remove in a
+      # follow-up once the new image (which reads GOOGLE_WEB_CLIENT_ID) is deployed everywhere.
+      env {
         name  = "GOOGLE_CLIENT_ID"
-        value = module.common.google_client_id
+        value = module.common.google_web_client_id
       }
 
       # Also accept ID tokens minted by the CLI's Desktop OAuth client, so
       # `ms-counter` can call the API (see GoogleIdTokenAuthDecorator).
       env {
         name  = "GOOGLE_CLI_CLIENT_ID"
-        value = module.common.cli_client_id
+        value = module.common.google_cli_client_id
       }
 
       env {
