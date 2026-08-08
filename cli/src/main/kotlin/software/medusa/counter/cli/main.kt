@@ -95,8 +95,13 @@ class LoginCommand : CliktCommand(name = "login") {
     val tokenClient = OAuth2TokenClient(GoogleOAuth.TOKEN_ENDPOINT, clientId, Secret(secret))
     val tokens =
         try {
-          GoogleSignInFlow(GoogleOAuth.AUTH_ENDPOINT, clientId, tokenClient, SystemBrowserOpener)
-              .login(echo = { echo(it) })
+          googleSignIn(
+              GoogleOAuth.AUTH_ENDPOINT,
+              clientId,
+              tokenClient,
+              SystemBrowserOpener,
+              echo = { echo(it) },
+          )
         } catch (e: OAuthException) {
           throw PrintMessage("Sign-in failed: ${e.message}", statusCode = 1, printError = true)
         }

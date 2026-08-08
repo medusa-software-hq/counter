@@ -32,10 +32,10 @@ class OAuth2TokenClient(
 ) {
   /** Exchanges an authorization code (with its PKCE verifier) for tokens. */
   fun exchangeAuthorizationCode(
-      code: String,
+      code: AuthorizationCode,
       codeVerifier: CodeVerifier,
       redirectUri: URI,
-  ): TokenSet = send(AuthorizationCodeGrant(AuthorizationCode(code), redirectUri, codeVerifier))
+  ): TokenSet = send(AuthorizationCodeGrant(code, redirectUri, codeVerifier))
 
   /** Mints a fresh ID token from a stored refresh token (no browser). */
   fun refresh(refreshToken: String): TokenSet = send(RefreshTokenGrant(RefreshToken(refreshToken)))
