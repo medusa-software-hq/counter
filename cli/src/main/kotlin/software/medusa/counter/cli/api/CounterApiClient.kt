@@ -3,11 +3,9 @@ package software.medusa.counter.cli.api
 import io.grpc.Grpc
 import io.grpc.InsecureChannelCredentials
 import io.grpc.ManagedChannel
-import io.grpc.Metadata
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import io.grpc.TlsChannelCredentials
-import io.grpc.stub.MetadataUtils
 import java.util.concurrent.TimeUnit
 import software.medusa.counter.cli.auth.IdTokenProvider
 import software.medusa.counter.v1.CounterServiceGrpc
@@ -17,30 +15,22 @@ import software.medusa.counter.v1.GetCountRequest
 import software.medusa.counter.v1.IncrementRequest
 
 /**
- * Talks to CounterService over gRPC, presenting the caller's Google ID token as a bearer credential
- * on every call. The token is fetched (and silently refreshed) via [idTokenProvider] just before
- * each request, so a lapsed session surfaces as [NotLoggedInException] rather than a gRPC error.
- * [close] shuts the channel down — the CLI uses one client per command.
+ * Talks to CounterService over gRPC. A [BearerTokenInterceptor] — attached to the stub once — puts
+ * the caller's Google ID token on every call, fetched (and silently refreshed) via
+ * [idTokenProvider] as the call starts, so a lapsed session surfaces as NotLoggedInException rather
+ * than a gRPC error. [close] shuts the channel down — the CLI uses one client per command.
  */
-class CounterApiClient(endpoint: ApiEndpoint, private val idTokenProvider: IdTokenProvider) :
-    AutoCloseable {
+class CounterApiClient(endpoint: ApiEndpoint, idTokenProvider: IdTokenProvider) : AutoCloseable {
   private val channel: ManagedChannel = channelFor(endpoint)
-  private val stub: CounterServiceBlockingStub = CounterServiceGrpc.newBlockingStub(channel)
+  private val stub: CounterServiceBlockingStub =
+      CounterServiceGrpc.newBlockingStub(channel)
+          .withInterceptors(BearerTokenInterceptor(idTokenProvider))
 
-  fun getCount(): Int = call { authed().getCount(GetCountRequest.getDefaultInstance()).count }
+  fun getCount(): Int = call { stub.getCount(GetCountRequest.getDefaultInstance()).count }
 
-  fun increment(): Int = call { authed().increment(IncrementRequest.getDefaultInstance()).count }
+  fun increment(): Int = call { stub.increment(IncrementRequest.getDefaultInstance()).count }
 
-  fun decrement(): Int = call { authed().decrement(DecrementRequest.getDefaultInstance()).count }
-
-  /**
-   * The stub with a fresh bearer token attached; fetching the token may throw
-   * [NotLoggedInException].
-   */
-  private fun authed(): CounterServiceBlockingStub {
-    val headers = Metadata().apply { put(AUTHORIZATION, "Bearer ${idTokenProvider.idToken()}") }
-    return stub.withInterceptors(MetadataUtils.newAttachHeadersInterceptor(headers))
-  }
+  fun decrement(): Int = call { stub.decrement(DecrementRequest.getDefaultInstance()).count }
 
   private inline fun <T> call(block: () -> T): T =
       try {
@@ -56,9 +46,6 @@ class CounterApiClient(endpoint: ApiEndpoint, private val idTokenProvider: IdTok
 
   companion object {
     private const val SHUTDOWN_TIMEOUT_SEC = 5L
-
-    private val AUTHORIZATION: Metadata.Key<String> =
-        Metadata.Key.of("Authorization", Metadata.ASCII_STRING_MARSHALLER)
 
     private fun channelFor(endpoint: ApiEndpoint): ManagedChannel {
       val credentials =
