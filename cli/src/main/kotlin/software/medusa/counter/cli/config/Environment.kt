@@ -93,7 +93,11 @@ sealed interface Environment {
    * local `login` attempt has *something* to present.
    */
   data class Local(private val configDir: Path, val port: Int) : Environment {
-    override val label = "local"
+    companion object {
+      const val LABEL = "local"
+    }
+
+    override val label = LABEL
     override val apiEndpoint = ApiEndpoint("127.0.0.1", port, useTls = false)
     override val oauthClientId = Prod.oauthClientId
     override val oauthClientSecretEnvVar = Prod.oauthClientSecretEnvVar
@@ -112,25 +116,21 @@ sealed interface Environment {
     const val LOCAL_PORT_ENV = "COUNTER_API_LOCAL_PORT"
 
     /**
-     * Resolve the environment for this invocation — the **single** read of `COUNTER_ENVIRONMENT` in
-     * the whole CLI (the composition root calls this once and injects the result via the Clikt
-     * context). Absent/blank → [Prod]; `local` requires both local variables. An unknown value or a
-     * misconfigured `local` raises [EnvironmentSelectionException] for a clean top-level message.
+     * Resolve the environment for this invocation from the `COUNTER_ENVIRONMENT` selector (the
+     * caller passes the raw env values). Matching is exact: absent → [Prod], else one of the three
+     * labels verbatim; `local` requires both local variables. Anything else, or a misconfigured
+     * `local`, raises [EnvironmentSelectionException] for a clean top-level message.
      */
-    fun current(
-        raw: String? = System.getenv(ENV_VAR),
-        localConfigPath: String? = System.getenv(LOCAL_CONFIG_PATH_ENV),
-        localPort: String? = System.getenv(LOCAL_PORT_ENV),
-    ): Environment =
-        when (raw?.trim()?.lowercase()?.ifBlank { null }) {
+    fun current(raw: String?, localConfigPath: String?, localPort: String?): Environment =
+        when (raw) {
           null,
-          "prod",
-          "production" -> Prod
-          "staging" -> Staging
-          "local" -> local(localConfigPath, localPort)
+          Prod.label -> Prod
+          Staging.label -> Staging
+          Local.LABEL -> local(localConfigPath, localPort)
           else ->
               throw EnvironmentSelectionException(
-                  "Unknown $ENV_VAR '$raw'. Valid values: prod (default), staging, local."
+                  "Unknown $ENV_VAR '$raw'. Valid values: ${Prod.label} (default), " +
+                      "${Staging.label}, ${Local.LABEL}."
               )
         }
 

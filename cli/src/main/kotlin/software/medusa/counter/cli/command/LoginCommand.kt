@@ -1,37 +1,34 @@
 package software.medusa.counter.cli.command
 
-import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.Context
 import com.github.ajalt.clikt.core.PrintMessage
-import com.github.ajalt.clikt.core.requireObject
 import software.medusa.counter.cli.auth.GoogleOAuth
 import software.medusa.counter.cli.auth.JwtToken
 import software.medusa.counter.cli.auth.OAuth2TokenClient
 import software.medusa.counter.cli.auth.OAuthException
 import software.medusa.counter.cli.auth.SystemBrowserOpener
 import software.medusa.counter.cli.auth.googleSignIn
+import software.medusa.counter.cli.config.ConfigStore
 import software.medusa.counter.cli.config.Credentials
 import software.medusa.counter.cli.config.Environment
 
 /** `login` — the loopback + PKCE browser sign-in; caches the refresh token for this environment. */
-class LoginCommand : CliktCommand(name = "login") {
-  private val env by requireObject<Environment>()
-
+class LoginCommand : AppCommand(name = "login") {
   override fun help(context: Context) =
       "Sign in with your medusa.software Google account and cache the session."
 
-  override fun run() {
+  override fun run(environment: Environment, configStore: ConfigStore) {
     val secret =
-        env.oauthClientSecret
+        environment.oauthClientSecret
             ?: throw PrintMessage(
-                "This CLI build has no OAuth client secret for ${env.label} and " +
-                    "${env.oauthClientSecretEnvVar} is not set. Install a released build, or set " +
-                    "that env var for a local build.",
+                "This CLI build has no OAuth client secret for ${environment.label} and " +
+                    "${environment.oauthClientSecretEnvVar} is not set. Install a released build, " +
+                    "or set that env var for a local build.",
                 statusCode = 1,
                 printError = true,
             )
 
-    val clientId = env.oauthClientId
+    val clientId = environment.oauthClientId
     val tokenClient = OAuth2TokenClient(GoogleOAuth.TOKEN_ENDPOINT, clientId, secret)
     val tokens =
         try {
@@ -54,8 +51,7 @@ class LoginCommand : CliktCommand(name = "login") {
                 printError = true,
             )
     val email = JwtToken.parse(tokens.idToken).email ?: "unknown"
-    env.configStore()
-        .saveCredentials(Credentials(refreshToken, tokens.idToken, tokens.expiresAt, email))
+    configStore.saveCredentials(Credentials(refreshToken, tokens.idToken, tokens.expiresAt, email))
     echo("Signed in as $email")
   }
 }

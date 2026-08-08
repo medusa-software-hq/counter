@@ -1,14 +1,12 @@
 package software.medusa.counter.cli.command
 
-import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.Context
-import com.github.ajalt.clikt.core.requireObject
-import software.medusa.counter.cli.config.Environment
+import software.medusa.counter.cli.api.CounterApiClient
 
-class IncrementCommand : CliktCommand(name = "increment") {
-  private val env by requireObject<Environment>()
-
+class IncrementCommand : ManagementCommand(name = "increment") {
   override fun help(context: Context) = "Increment the counter and print the new value."
 
-  override fun run() = runCounter { env.apiClient().use { echo("Count: ${it.increment()}") } }
+  override fun run(apiClient: CounterApiClient) {
+    echo("Count: ${apiClient.increment()}")
+  }
 }

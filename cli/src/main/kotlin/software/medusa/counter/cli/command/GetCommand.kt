@@ -1,14 +1,12 @@
 package software.medusa.counter.cli.command
 
-import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.Context
-import com.github.ajalt.clikt.core.requireObject
-import software.medusa.counter.cli.config.Environment
+import software.medusa.counter.cli.api.CounterApiClient
 
-class GetCommand : CliktCommand(name = "get") {
-  private val env by requireObject<Environment>()
-
+class GetCommand : ManagementCommand(name = "get") {
   override fun help(context: Context) = "Print the current counter value."
 
-  override fun run() = runCounter { env.apiClient().use { echo("Count: ${it.getCount()}") } }
+  override fun run(apiClient: CounterApiClient) {
+    echo("Count: ${apiClient.getCount()}")
+  }
 }

@@ -11,36 +11,33 @@ import software.medusa.counter.cli.api.ApiEndpoint
 class EnvironmentTest {
   @Test
   fun `absent or prod selects Prod`() {
-    assertEquals(Environment.Prod, Environment.current(raw = null))
-    assertEquals(Environment.Prod, Environment.current(raw = ""))
-    assertEquals(Environment.Prod, Environment.current(raw = "prod"))
-    assertEquals(Environment.Prod, Environment.current(raw = "PRODUCTION"))
+    assertEquals(Environment.Prod, Environment.current(null, null, null))
+    assertEquals(Environment.Prod, Environment.current("prod", null, null))
   }
 
   @Test
-  fun `staging is case-insensitive`() {
-    assertEquals(Environment.Staging, Environment.current(raw = "staging"))
-    assertEquals(Environment.Staging, Environment.current(raw = " Staging "))
+  fun `staging selects Staging`() {
+    assertEquals(Environment.Staging, Environment.current("staging", null, null))
   }
 
   @Test
-  fun `unknown environment is rejected`() {
-    assertFailsWith<EnvironmentSelectionException> { Environment.current(raw = "prd") }
+  fun `matching is exact — blanks, case, and aliases are rejected`() {
+    assertFailsWith<EnvironmentSelectionException> { Environment.current("", null, null) }
+    assertFailsWith<EnvironmentSelectionException> { Environment.current("PROD", null, null) }
+    assertFailsWith<EnvironmentSelectionException> { Environment.current("production", null, null) }
+    assertFailsWith<EnvironmentSelectionException> { Environment.current(" staging ", null, null) }
+    assertFailsWith<EnvironmentSelectionException> { Environment.current("prd", null, null) }
   }
 
   @Test
   fun `local requires config path and a valid port`() {
-    val env = Environment.current(raw = "local", localConfigPath = "/tmp/x", localPort = "8081")
+    val env = Environment.current("local", "/tmp/x", "8081")
     assertTrue(env is Environment.Local)
     assertEquals(ApiEndpoint("127.0.0.1", 8081, useTls = false), env.apiEndpoint)
+    assertFailsWith<EnvironmentSelectionException> { Environment.current("local", null, "8081") }
+    assertFailsWith<EnvironmentSelectionException> { Environment.current("local", "/tmp/x", null) }
     assertFailsWith<EnvironmentSelectionException> {
-      Environment.current(raw = "local", localConfigPath = null, localPort = "8081")
-    }
-    assertFailsWith<EnvironmentSelectionException> {
-      Environment.current(raw = "local", localConfigPath = "/tmp/x", localPort = null)
-    }
-    assertFailsWith<EnvironmentSelectionException> {
-      Environment.current(raw = "local", localConfigPath = "/tmp/x", localPort = "nope")
+      Environment.current("local", "/tmp/x", "nope")
     }
   }
 
