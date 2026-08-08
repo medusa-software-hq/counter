@@ -23,7 +23,7 @@ class BearerTokenInterceptor(private val idTokenProvider: IdTokenProvider) : Cli
   ): ClientCall<ReqT, RespT> =
       object : SimpleForwardingClientCall<ReqT, RespT>(next.newCall(method, callOptions)) {
         override fun start(responseListener: ClientCall.Listener<RespT>, headers: Metadata) {
-          headers.put(AUTHORIZATION, "Bearer ${idTokenProvider.idToken()}")
+          headers.put(AUTHORIZATION, "Bearer ${idTokenProvider.provideFreshIdToken()}")
           super.start(responseListener, headers)
         }
       }

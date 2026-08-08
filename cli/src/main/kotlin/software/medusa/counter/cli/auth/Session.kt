@@ -15,7 +15,7 @@ class Session(
     private val refresher: TokenRefresher,
     private val clock: Clock = Clock.System,
 ) : IdTokenProvider {
-  override fun idToken(): String {
+  override fun provideFreshIdToken(): String {
     val credentials =
         configStore.loadCredentials()
             ?: throw NotLoggedInException("Not signed in. Run 'ms-counter login' first.")
