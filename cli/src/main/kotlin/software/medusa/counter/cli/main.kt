@@ -98,7 +98,7 @@ class LoginCommand : CliktCommand(name = "login") {
                 statusCode = 1,
                 printError = true,
             )
-    val email = Jwt.email(tokens.idToken) ?: "unknown"
+    val email = JwtToken.parse(tokens.idToken).email ?: "unknown"
     saveCredentials(
         Credentials(refreshToken, tokens.idToken, tokens.expiresAtEpochSec, email),
         env.configDir,

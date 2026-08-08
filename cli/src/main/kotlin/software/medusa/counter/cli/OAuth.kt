@@ -114,7 +114,7 @@ internal fun parseQuery(rawQuery: String?): Map<String, String> {
 internal fun toTokenSet(response: TokenEndpointResponse): TokenSet {
   val idToken = response.idToken ?: throw OAuthException("no_id_token", null)
   val expiry =
-      Jwt.expiresAtEpochSec(idToken)
+      JwtToken.parse(idToken).expiresAtEpochSec
           ?: (System.currentTimeMillis() / 1000 + (response.expiresIn ?: 3600))
   return TokenSet(idToken, response.refreshToken, expiry)
 }
