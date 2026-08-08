@@ -6,7 +6,7 @@ import software.medusa.counter.cli.auth.ConfigIdTokenProvider
 import software.medusa.counter.cli.auth.DefaultTokenRefresher
 import software.medusa.counter.cli.auth.GoogleOAuth
 import software.medusa.counter.cli.auth.NotLoggedInException
-import software.medusa.counter.cli.auth.OAuth2TokenClient
+import software.medusa.counter.cli.auth.OAuthTokenClient
 import software.medusa.counter.cli.config.ConfigStore
 import software.medusa.counter.cli.config.Environment
 
@@ -18,7 +18,7 @@ import software.medusa.counter.cli.config.Environment
 abstract class ManagementCommand(name: String) : AppCommand(name = name) {
   final override fun run(environment: Environment, configStore: ConfigStore) {
     val tokenClient =
-        OAuth2TokenClient(
+        OAuthTokenClient(
             GoogleOAuth.TOKEN_ENDPOINT,
             environment.oauthClientId,
             environment.oauthClientSecret,

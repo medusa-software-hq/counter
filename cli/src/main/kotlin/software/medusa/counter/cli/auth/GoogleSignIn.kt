@@ -33,7 +33,7 @@ private const val googleAccessTypeOffline = "offline"
 fun googleSignIn(
     authEndpoint: URI,
     clientId: ClientID,
-    tokenClient: OAuth2TokenClient,
+    tokenClient: OAuthTokenClient,
     browserOpener: BrowserOpener,
     echo: (String) -> Unit,
 ): TokenSet {

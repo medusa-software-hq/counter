@@ -25,7 +25,7 @@ import kotlin.time.Instant
  * by the Nimbus SDK. Transport + protocol only — no browser, no interactive flow: it turns a grant
  * into a [TokenSet], raising [OAuthException] for an OAuth error response or a transport failure.
  */
-class OAuth2TokenClient(
+class OAuthTokenClient(
     private val tokenEndpoint: URI,
     private val clientId: ClientID,
     private val clientSecret: Secret,

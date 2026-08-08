@@ -4,8 +4,8 @@ import com.github.ajalt.clikt.core.Context
 import com.github.ajalt.clikt.core.PrintMessage
 import software.medusa.counter.cli.auth.GoogleOAuth
 import software.medusa.counter.cli.auth.JwtToken
-import software.medusa.counter.cli.auth.OAuth2TokenClient
 import software.medusa.counter.cli.auth.OAuthException
+import software.medusa.counter.cli.auth.OAuthTokenClient
 import software.medusa.counter.cli.auth.SystemBrowserOpener
 import software.medusa.counter.cli.auth.googleSignIn
 import software.medusa.counter.cli.config.ConfigStore
@@ -20,7 +20,7 @@ class LoginCommand : AppCommand(name = "login") {
   override fun run(environment: Environment, configStore: ConfigStore) {
     val clientId = environment.oauthClientId
     val tokenClient =
-        OAuth2TokenClient(GoogleOAuth.TOKEN_ENDPOINT, clientId, environment.oauthClientSecret)
+        OAuthTokenClient(GoogleOAuth.TOKEN_ENDPOINT, clientId, environment.oauthClientSecret)
     val tokens =
         try {
           googleSignIn(
