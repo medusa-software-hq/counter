@@ -29,7 +29,7 @@ class OAuthTokenClient(
     private val tokenEndpoint: URI,
     private val clientId: ClientID,
     private val clientSecret: Secret,
-) {
+) : OAuthTokenRefresher {
   /** Exchanges an authorization code (with its PKCE verifier) for tokens. */
   fun exchangeAuthorizationCode(
       code: AuthorizationCode,
@@ -38,7 +38,8 @@ class OAuthTokenClient(
   ): TokenSet = send(AuthorizationCodeGrant(code, redirectUri, codeVerifier))
 
   /** Mints a fresh ID token from a stored refresh token (no browser). */
-  fun refresh(refreshToken: String): TokenSet = send(RefreshTokenGrant(RefreshToken(refreshToken)))
+  override fun refresh(refreshToken: String): TokenSet =
+      send(RefreshTokenGrant(RefreshToken(refreshToken)))
 
   private fun send(grant: AuthorizationGrant): TokenSet {
     val request =

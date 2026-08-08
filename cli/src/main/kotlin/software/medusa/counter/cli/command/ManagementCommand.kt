@@ -3,7 +3,6 @@ package software.medusa.counter.cli.command
 import kotlin.time.Clock
 import software.medusa.counter.cli.api.CounterApiClient
 import software.medusa.counter.cli.auth.ConfigIdTokenProvider
-import software.medusa.counter.cli.auth.DefaultTokenRefresher
 import software.medusa.counter.cli.auth.GoogleOAuth
 import software.medusa.counter.cli.auth.NotLoggedInException
 import software.medusa.counter.cli.auth.OAuthTokenClient
@@ -24,7 +23,7 @@ abstract class ManagementCommand(name: String) : AppCommand(name = name) {
             environment.oauthClientSecret,
         )
     val idTokenProvider =
-        ConfigIdTokenProvider.load(Clock.System, configStore, DefaultTokenRefresher(tokenClient))
+        ConfigIdTokenProvider.load(Clock.System, configStore, tokenClient)
             ?: throw NotLoggedInException("Not signed in. Run 'ms-counter login' first.")
 
     CounterApiClient(environment.apiEndpoint, idTokenProvider).use { run(it) }

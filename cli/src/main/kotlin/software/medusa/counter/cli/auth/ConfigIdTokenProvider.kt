@@ -16,7 +16,7 @@ class ConfigIdTokenProvider
 private constructor(
     private val clock: Clock,
     private val configStore: ConfigStore,
-    private val tokenRefresher: TokenRefresher,
+    private val tokenRefresher: OAuthTokenRefresher,
     initialCredentials: Credentials,
 ) : IdTokenProvider {
   private var credentials = initialCredentials
@@ -45,7 +45,7 @@ private constructor(
     fun load(
         clock: Clock,
         configStore: ConfigStore,
-        tokenRefresher: TokenRefresher,
+        tokenRefresher: OAuthTokenRefresher,
     ): ConfigIdTokenProvider? {
       val credentials = configStore.loadCredentials() ?: return null
       return ConfigIdTokenProvider(clock, configStore, tokenRefresher, credentials)
