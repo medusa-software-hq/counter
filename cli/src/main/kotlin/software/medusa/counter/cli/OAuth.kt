@@ -169,18 +169,6 @@ internal class LoopbackReceiver : AutoCloseable {
   override fun close() = server.stop(0)
 }
 
-/** Opens [url] in the platform browser; returns false if no opener could be launched. */
-internal fun openInBrowser(url: String): Boolean {
-  val os = System.getProperty("os.name").lowercase()
-  val command =
-      when {
-        "mac" in os || "darwin" in os -> listOf("open", url)
-        "win" in os -> listOf("rundll32", "url.dll,FileProtocolHandler", url)
-        else -> listOf("xdg-open", url)
-      }
-  return runCatching { ProcessBuilder(command).inheritIO().start() }.isSuccess
-}
-
 /** Drives the human OAuth sign-in and token refresh for a given environment's Desktop client. */
 class CounterOAuth(
     private val clientId: String,
@@ -192,13 +180,16 @@ class CounterOAuth(
    * Runs the loopback + PKCE sign-in: opens the browser, waits for the redirect, exchanges the code
    * for tokens. [openBrowser] and [echo] are injectable for testing.
    */
-  fun login(openBrowser: (String) -> Boolean = ::openInBrowser, echo: (String) -> Unit): TokenSet {
+  fun login(
+      browserOpener: BrowserOpener = SystemBrowserOpener,
+      echo: (String) -> Unit,
+  ): TokenSet {
     val verifier = generateCodeVerifier()
     val state = randomUrlSafe(16)
     LoopbackReceiver().use { receiver ->
       val url = buildAuthUrl(clientId, receiver.redirectUri, codeChallenge(verifier), state)
       echo("Opening your browser to sign in…")
-      if (!openBrowser(url)) {
+      if (!browserOpener.open(url)) {
         echo("Couldn't open a browser automatically. Open this URL to continue:\n$url")
       }
       val callback = receiver.awaitCallback(callbackTimeout)

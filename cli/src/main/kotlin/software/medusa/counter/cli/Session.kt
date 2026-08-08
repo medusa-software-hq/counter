@@ -6,31 +6,17 @@ package software.medusa.counter.cli
 class NotLoggedInException(message: String) : Exception(message)
 
 /**
- * The default token refresher for [env]: mints a fresh ID token via that environment's OAuth client
- * (id + the secret this build resolves for it).
- */
-internal fun defaultRefresher(env: Environment): (String) -> TokenSet = { refreshToken ->
-  val secret =
-      env.oauthClientSecret
-          ?: throw NotLoggedInException(
-              "This CLI build has no OAuth client secret for ${env.label}; set " +
-                  "${env.oauthClientSecretEnvVar}."
-          )
-  CounterOAuth(clientId = env.oauthClientId, clientSecret = secret).refresh(refreshToken)
-}
-
-/**
  * Supplies a currently-valid Google ID token for API calls: hands back the cached one while it's
  * still good, and silently refreshes it (no browser) when it's expired. Only a revoked/expired
  * refresh token forces a fresh `ms-counter login`. Environment-agnostic by construction — the
- * caller passes the environment's [configStore] and its [refresher] (see [defaultRefresher]).
+ * caller passes the environment's [configStore] and its [refresher] (see [DefaultTokenRefresher]).
  */
 class Session(
     private val configStore: ConfigStore,
     private val nowEpochSec: () -> Long = { System.currentTimeMillis() / 1000 },
-    private val refresher: (String) -> TokenSet,
-) {
-  fun currentIdToken(): String {
+    private val refresher: TokenRefresher,
+) : IdTokenProvider {
+  override fun idToken(): String {
     val credentials =
         configStore.loadCredentials()
             ?: throw NotLoggedInException("Not signed in. Run 'ms-counter login' first.")
@@ -42,7 +28,7 @@ class Session(
 
     val refreshed =
         try {
-          refresher(credentials.refreshToken)
+          refresher.refresh(credentials.refreshToken)
         } catch (e: OAuthException) {
           throw NotLoggedInException("Session expired (${e.code}). Run 'ms-counter login' again.")
         }

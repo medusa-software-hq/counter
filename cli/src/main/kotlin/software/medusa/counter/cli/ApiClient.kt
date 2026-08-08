@@ -23,7 +23,7 @@ class ApiException(val statusCode: Int, message: String) : Exception(message)
  */
 class CounterApiClient(
     private val baseUrl: String,
-    private val idTokenProvider: () -> String,
+    private val idTokenProvider: IdTokenProvider,
     private val httpClient: HttpClient = HttpClient.newHttpClient(),
 ) {
   fun getCount(): Int = count("GetCount")
@@ -38,7 +38,7 @@ class CounterApiClient(
   private fun post(method: String, body: String): String {
     val request =
         HttpRequest.newBuilder(URI.create("${baseUrl.trimEnd('/')}$counterService/$method"))
-            .header("Authorization", "Bearer ${idTokenProvider()}")
+            .header("Authorization", "Bearer ${idTokenProvider.idToken()}")
             .header("Content-Type", "application/json")
             .header("Accept", "application/json")
             .POST(HttpRequest.BodyPublishers.ofString(body))

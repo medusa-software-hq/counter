@@ -52,9 +52,7 @@ private fun Environment.configStore(): ConfigStore = ConfigStore(configDir)
 private fun Environment.apiClient(): CounterApiClient =
     CounterApiClient(
         apiBaseUrl,
-        idTokenProvider = {
-          Session(configStore(), refresher = defaultRefresher(this)).currentIdToken()
-        },
+        idTokenProvider = Session(configStore(), refresher = DefaultTokenRefresher(this)),
     )
 
 /** Turns the two expected failures into clean, actionable CLI errors. */
