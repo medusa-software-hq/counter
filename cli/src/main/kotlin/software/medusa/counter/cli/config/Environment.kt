@@ -37,10 +37,10 @@ sealed interface Environment {
 
   /**
    * The OAuth client secret for [oauthClientId] — baked at publish, or an env override for a local
-   * build, or null if neither is present (`login` then reports how to set it). For a Desktop client
-   * Google explicitly does not treat this as confidential.
+   * build, else a placeholder that only satisfies the local backend (which ignores auth). For a
+   * Desktop client Google explicitly does not treat this as confidential.
    */
-  val oauthClientSecret: Secret?
+  val oauthClientSecret: Secret
 
   /** The one-line stderr banner a non-prod session prints so a human can't mix environments. */
   val marker: String?
@@ -58,11 +58,13 @@ sealed interface Environment {
     override val oauthClientId =
         ClientID("390879863874-2lni09664lo24g44kakjceu2j7s164nr.apps.googleusercontent.com")
     override val oauthClientSecretEnvVar = "COUNTER_CLI_OAUTH_CLIENT_SECRET"
-    override val oauthClientSecret: Secret?
+    override val oauthClientSecret: Secret
       get() =
-          (System.getenv(oauthClientSecretEnvVar)?.ifBlank { null }
-                  ?: BuildConfig.bakedProperty("oauthClientSecret"))
-              ?.let { Secret(it) }
+          Secret(
+              System.getenv(oauthClientSecretEnvVar)?.ifBlank { null }
+                  ?: BuildConfig.bakedProperty("oauthClientSecret")
+                  ?: PLACEHOLDER_CLIENT_SECRET
+          )
 
     override val marker: String? = null
   }
@@ -77,11 +79,13 @@ sealed interface Environment {
     override val oauthClientId =
         ClientID("1099281545285-smp4hh6b1rec63qgblp6apgbe534kpdd.apps.googleusercontent.com")
     override val oauthClientSecretEnvVar = "COUNTER_CLI_OAUTH_CLIENT_SECRET_STAGING"
-    override val oauthClientSecret: Secret?
+    override val oauthClientSecret: Secret
       get() =
-          (System.getenv(oauthClientSecretEnvVar)?.ifBlank { null }
-                  ?: BuildConfig.bakedProperty("stagingOauthClientSecret"))
-              ?.let { Secret(it) }
+          Secret(
+              System.getenv(oauthClientSecretEnvVar)?.ifBlank { null }
+                  ?: BuildConfig.bakedProperty("stagingOauthClientSecret")
+                  ?: PLACEHOLDER_CLIENT_SECRET
+          )
 
     override val marker = "[staging]"
   }
@@ -101,7 +105,7 @@ sealed interface Environment {
     override val apiEndpoint = ApiEndpoint("127.0.0.1", port, useTls = false)
     override val oauthClientId = Prod.oauthClientId
     override val oauthClientSecretEnvVar = Prod.oauthClientSecretEnvVar
-    override val oauthClientSecret: Secret?
+    override val oauthClientSecret: Secret
       get() = Prod.oauthClientSecret
 
     override val marker = "[local]"
@@ -114,6 +118,11 @@ sealed interface Environment {
     const val ENV_VAR = "COUNTER_ENVIRONMENT"
     const val LOCAL_CONFIG_PATH_ENV = "COUNTER_LOCAL_CONFIG_PATH"
     const val LOCAL_PORT_ENV = "COUNTER_API_LOCAL_PORT"
+
+    // Stand-in when no real secret is baked or set: fine for the local backend (which ignores
+    // auth),
+    // and Google simply rejects it for prod/staging — a released build always bakes the real one.
+    private const val PLACEHOLDER_CLIENT_SECRET = "local-development-unset"
 
     /**
      * Resolve the environment for this invocation from the `COUNTER_ENVIRONMENT` selector (the

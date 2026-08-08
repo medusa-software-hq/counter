@@ -17,14 +17,12 @@ import software.medusa.counter.cli.config.Environment
  */
 abstract class ManagementCommand(name: String) : AppCommand(name = name) {
   final override fun run(environment: Environment, configStore: ConfigStore) {
-    val secret =
-        environment.oauthClientSecret
-            ?: throw NotLoggedInException(
-                "This CLI build has no OAuth client secret for ${environment.label}; set " +
-                    "${environment.oauthClientSecretEnvVar}."
-            )
     val tokenClient =
-        OAuth2TokenClient(GoogleOAuth.TOKEN_ENDPOINT, environment.oauthClientId, secret)
+        OAuth2TokenClient(
+            GoogleOAuth.TOKEN_ENDPOINT,
+            environment.oauthClientId,
+            environment.oauthClientSecret,
+        )
     val idTokenProvider =
         ConfigIdTokenProvider.load(Clock.System, configStore, DefaultTokenRefresher(tokenClient))
             ?: throw NotLoggedInException("Not signed in. Run 'ms-counter login' first.")

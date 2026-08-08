@@ -18,18 +18,9 @@ class LoginCommand : AppCommand(name = "login") {
       "Sign in with your medusa.software Google account and cache the session."
 
   override fun run(environment: Environment, configStore: ConfigStore) {
-    val secret =
-        environment.oauthClientSecret
-            ?: throw PrintMessage(
-                "This CLI build has no OAuth client secret for ${environment.label} and " +
-                    "${environment.oauthClientSecretEnvVar} is not set. Install a released build, " +
-                    "or set that env var for a local build.",
-                statusCode = 1,
-                printError = true,
-            )
-
     val clientId = environment.oauthClientId
-    val tokenClient = OAuth2TokenClient(GoogleOAuth.TOKEN_ENDPOINT, clientId, secret)
+    val tokenClient =
+        OAuth2TokenClient(GoogleOAuth.TOKEN_ENDPOINT, clientId, environment.oauthClientSecret)
     val tokens =
         try {
           googleSignIn(
