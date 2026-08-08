@@ -28,6 +28,14 @@ private const val oauthScopes = "openid email"
 
 private val oauthJson = Json { ignoreUnknownKeys = true }
 
+// Reusable, thread-safe crypto/encoding primitives — created once rather than per call. A fresh
+// SecureRandom re-seeds on construction; the Base64 URL encoder is stateless.
+private val secureRandom = SecureRandom()
+private val urlEncoder: Base64.Encoder = Base64.getUrlEncoder().withoutPadding()
+
+/** How long the loopback receiver waits for Google's browser redirect before giving up. */
+private val callbackTimeout: Duration = Duration.ofMinutes(5)
+
 /** A Google ID token plus the refresh token and the ID token's expiry (epoch seconds). */
 data class TokenSet(val idToken: String, val refreshToken: String?, val expiresAtEpochSec: Long)
 
@@ -57,8 +65,8 @@ private fun urlEncode(value: String): String = URLEncoder.encode(value, Standard
 
 private fun randomUrlSafe(bytes: Int): String {
   val buf = ByteArray(bytes)
-  SecureRandom().nextBytes(buf)
-  return Base64.getUrlEncoder().withoutPadding().encodeToString(buf)
+  secureRandom.nextBytes(buf)
+  return urlEncoder.encodeToString(buf)
 }
 
 /** PKCE code verifier — a high-entropy URL-safe string (RFC 7636). */
@@ -68,7 +76,7 @@ internal fun generateCodeVerifier(): String = randomUrlSafe(32)
 internal fun codeChallenge(verifier: String): String {
   val digest =
       MessageDigest.getInstance("SHA-256").digest(verifier.toByteArray(StandardCharsets.US_ASCII))
-  return Base64.getUrlEncoder().withoutPadding().encodeToString(digest)
+  return urlEncoder.encodeToString(digest)
 }
 
 internal fun buildAuthUrl(
@@ -193,7 +201,7 @@ class CounterOAuth(
       if (!openBrowser(url)) {
         echo("Couldn't open a browser automatically. Open this URL to continue:\n$url")
       }
-      val callback = receiver.awaitCallback(Duration.ofMinutes(5))
+      val callback = receiver.awaitCallback(callbackTimeout)
       if (callback.error != null) throw OAuthException(callback.error, callback.errorDescription)
       if (callback.state != state) {
         throw OAuthException("state_mismatch", "OAuth state did not match; aborting.")

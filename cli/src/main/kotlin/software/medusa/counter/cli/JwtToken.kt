@@ -14,6 +14,7 @@ import kotlinx.serialization.json.longOrNull
 data class JwtToken(val email: String?, val expiresAtEpochSec: Long?) {
   companion object {
     private val json = Json { ignoreUnknownKeys = true }
+    private val urlDecoder: Base64.Decoder = Base64.getUrlDecoder()
 
     /** Reads the claims from [idToken]'s payload; a malformed token or claim yields nulls. */
     fun parse(idToken: String): JwtToken {
@@ -27,7 +28,7 @@ data class JwtToken(val email: String?, val expiresAtEpochSec: Long?) {
     private fun payload(idToken: String): JsonObject {
       val parts = idToken.split(".")
       require(parts.size == 3) { "Not a JWT" }
-      val decoded = Base64.getUrlDecoder().decode(parts[1])
+      val decoded = urlDecoder.decode(parts[1])
       return json.parseToJsonElement(String(decoded, Charsets.UTF_8)) as JsonObject
     }
   }
