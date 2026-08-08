@@ -29,7 +29,7 @@ class GoogleSignInFlow(
     LoopbackReceiver().use { receiver ->
       val authUrl = authorizationUrl(receiver.redirectUri, codeVerifier, state)
       echo("Opening your browser to sign in…")
-      if (!browserOpener.open(authUrl.toString())) {
+      if (!browserOpener.open(authUrl)) {
         echo("Couldn't open a browser automatically. Open this URL to continue:\n$authUrl")
       }
       val response = AuthorizationResponse.parse(receiver.awaitCallback(CALLBACK_TIMEOUT))

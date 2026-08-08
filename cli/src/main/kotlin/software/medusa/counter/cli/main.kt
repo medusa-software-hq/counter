@@ -110,7 +110,7 @@ class LoginCommand : CliktCommand(name = "login") {
             )
     val email = JwtToken.parse(tokens.idToken).email ?: "unknown"
     env.configStore()
-        .saveCredentials(Credentials(refreshToken, tokens.idToken, tokens.expiresAtEpochSec, email))
+        .saveCredentials(Credentials(refreshToken, tokens.idToken, tokens.expiresAt, email))
     echo("Signed in as $email")
   }
 }

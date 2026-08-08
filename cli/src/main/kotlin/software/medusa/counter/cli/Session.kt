@@ -1,6 +1,7 @@
 package software.medusa.counter.cli
 
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Raised when there's no usable session — the caller turns it into a "run ms-counter login" hint.
@@ -24,7 +25,7 @@ class Session(
             ?: throw NotLoggedInException("Not signed in. Run 'ms-counter login' first.")
 
     // Refresh a little early so a token doesn't expire mid-request.
-    if (credentials.idTokenExpiresAtEpochSec > clock.now().epochSeconds + 30) {
+    if (credentials.idTokenExpiresAt > clock.now() + REFRESH_SKEW) {
       return credentials.idToken
     }
 
@@ -36,11 +37,13 @@ class Session(
         }
 
     configStore.saveCredentials(
-        credentials.copy(
-            idToken = refreshed.idToken,
-            idTokenExpiresAtEpochSec = refreshed.expiresAtEpochSec,
-        )
+        credentials.copy(idToken = refreshed.idToken, idTokenExpiresAt = refreshed.expiresAt)
     )
     return refreshed.idToken
+  }
+
+  companion object {
+    // Refresh this far ahead of expiry so a token can't lapse mid-request.
+    private val REFRESH_SKEW = 30.seconds
   }
 }

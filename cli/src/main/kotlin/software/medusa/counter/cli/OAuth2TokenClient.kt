@@ -16,6 +16,9 @@ import com.nimbusds.openid.connect.sdk.OIDCTokenResponse
 import com.nimbusds.openid.connect.sdk.OIDCTokenResponseParser
 import java.io.IOException
 import java.net.URI
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Instant
 
 /**
  * The OAuth 2.0 / OpenID Connect token endpoint (RFC 6749 §3.2) for one configured client, backed
@@ -58,15 +61,17 @@ class OAuth2TokenClient(
     }
     val tokens = (response.toSuccessResponse() as OIDCTokenResponse).oidcTokens
     val idToken = tokens.idTokenString ?: throw OAuthException("no_id_token", null)
-    return TokenSet(idToken, tokens.refreshToken?.value, expiresAtEpochSec(tokens.idToken))
+    return TokenSet(idToken, tokens.refreshToken?.value, expiresAt(tokens.idToken))
   }
 
-  /** The ID token's `exp` (epoch seconds), or a conservative default if it can't be read. */
-  private fun expiresAtEpochSec(idToken: JWT?): Long =
-      runCatching { idToken?.jwtClaimsSet?.expirationTime?.time?.div(1000) }.getOrNull()
-          ?: (System.currentTimeMillis() / 1000 + DEFAULT_LIFETIME_SEC)
+  /** The ID token's `exp`, or a conservative default from now if it can't be read. */
+  private fun expiresAt(idToken: JWT?): Instant =
+      runCatching {
+            idToken?.jwtClaimsSet?.expirationTime?.let { Instant.fromEpochMilliseconds(it.time) }
+          }
+          .getOrNull() ?: (Clock.System.now() + DEFAULT_LIFETIME)
 
   companion object {
-    private const val DEFAULT_LIFETIME_SEC = 3600L
+    private val DEFAULT_LIFETIME = 1.hours
   }
 }
