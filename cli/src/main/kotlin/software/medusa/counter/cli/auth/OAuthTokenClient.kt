@@ -38,8 +38,7 @@ class OAuthTokenClient(
   ): TokenSet = send(AuthorizationCodeGrant(code, redirectUri, codeVerifier))
 
   /** Mints a fresh ID token from a stored refresh token (no browser). */
-  override fun refresh(refreshToken: String): TokenSet =
-      send(RefreshTokenGrant(RefreshToken(refreshToken)))
+  override fun refresh(refreshToken: RefreshToken): TokenSet = send(RefreshTokenGrant(refreshToken))
 
   private fun send(grant: AuthorizationGrant): TokenSet {
     val request =
@@ -62,7 +61,7 @@ class OAuthTokenClient(
     }
     val tokens = (response.toSuccessResponse() as OIDCTokenResponse).oidcTokens
     val idToken = tokens.idTokenString ?: throw OAuthException("no_id_token", null)
-    return TokenSet(idToken, tokens.refreshToken?.value, expiresAt(tokens.idToken))
+    return TokenSet(idToken, tokens.refreshToken, expiresAt(tokens.idToken))
   }
 
   /** The ID token's `exp`, or a conservative default from now if it can't be read. */
