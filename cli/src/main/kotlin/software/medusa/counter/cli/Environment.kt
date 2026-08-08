@@ -47,7 +47,7 @@ sealed interface Environment {
   val configDir: Path
 
   /** The one backend endpoint for this environment. */
-  val apiBaseUrl: String
+  val apiEndpoint: ApiEndpoint
 
   /** The Desktop OAuth client id sign-in presents; the API's accepted CLI audience. */
   val oauthClientId: String
@@ -68,7 +68,8 @@ sealed interface Environment {
   data object Prod : Environment {
     override val label = "prod"
     override val configDir: Path = configBaseDir().resolve(label)
-    override val apiBaseUrl = "https://api.counter-baseline.medusa.software"
+    override val apiEndpoint =
+        ApiEndpoint("api.counter-baseline.medusa.software", 443, useTls = true)
     override val oauthClientId =
         "390879863874-2lni09664lo24g44kakjceu2j7s164nr.apps.googleusercontent.com"
     override val oauthClientSecretEnvVar = "COUNTER_CLI_OAUTH_CLIENT_SECRET"
@@ -83,7 +84,8 @@ sealed interface Environment {
   data object Staging : Environment {
     override val label = "staging"
     override val configDir: Path = configBaseDir().resolve(label)
-    override val apiBaseUrl = "https://api.counter-baseline-staging.medusa.software"
+    override val apiEndpoint =
+        ApiEndpoint("api.counter-baseline-staging.medusa.software", 443, useTls = true)
     override val oauthClientId =
         "1099281545285-smp4hh6b1rec63qgblp6apgbe534kpdd.apps.googleusercontent.com"
     override val oauthClientSecretEnvVar = "COUNTER_CLI_OAUTH_CLIENT_SECRET_STAGING"
@@ -103,7 +105,7 @@ sealed interface Environment {
    */
   data class Local(override val configDir: Path, val port: Int) : Environment {
     override val label = "local"
-    override val apiBaseUrl = "http://127.0.0.1:$port"
+    override val apiEndpoint = ApiEndpoint("127.0.0.1", port, useTls = false)
     override val oauthClientId = Prod.oauthClientId
     override val oauthClientSecretEnvVar = Prod.oauthClientSecretEnvVar
     override val oauthClientSecret: String?

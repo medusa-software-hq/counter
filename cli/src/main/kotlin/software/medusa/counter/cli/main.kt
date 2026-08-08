@@ -52,10 +52,7 @@ fun main(args: Array<String>) {
 private fun Environment.configStore(): ConfigStore = ConfigStore(configDir)
 
 private fun Environment.apiClient(): CounterApiClient =
-    CounterApiClient(
-        apiBaseUrl,
-        idTokenProvider = Session(configStore(), refresher = DefaultTokenRefresher(this)),
-    )
+    CounterApiClient(apiEndpoint, Session(configStore(), refresher = DefaultTokenRefresher(this)))
 
 /** Turns the two expected failures into clean, actionable CLI errors. */
 private inline fun <T> runCounter(block: () -> T): T =
@@ -126,7 +123,7 @@ class IncrementCommand : CliktCommand(name = "increment") {
 
   override fun help(context: Context) = "Increment the counter and print the new value."
 
-  override fun run() = runCounter { echo("Count: ${env.apiClient().increment()}") }
+  override fun run() = runCounter { env.apiClient().use { echo("Count: ${it.increment()}") } }
 }
 
 class DecrementCommand : CliktCommand(name = "decrement") {
@@ -134,7 +131,7 @@ class DecrementCommand : CliktCommand(name = "decrement") {
 
   override fun help(context: Context) = "Decrement the counter and print the new value."
 
-  override fun run() = runCounter { echo("Count: ${env.apiClient().decrement()}") }
+  override fun run() = runCounter { env.apiClient().use { echo("Count: ${it.decrement()}") } }
 }
 
 class GetCommand : CliktCommand(name = "get") {
@@ -142,5 +139,5 @@ class GetCommand : CliktCommand(name = "get") {
 
   override fun help(context: Context) = "Print the current counter value."
 
-  override fun run() = runCounter { echo("Count: ${env.apiClient().getCount()}") }
+  override fun run() = runCounter { env.apiClient().use { echo("Count: ${it.getCount()}") } }
 }

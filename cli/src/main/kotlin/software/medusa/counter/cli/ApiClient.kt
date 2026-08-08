@@ -1,60 +1,80 @@
 package software.medusa.counter.cli
 
-import java.net.URI
-import java.net.http.HttpClient
-import java.net.http.HttpRequest
-import java.net.http.HttpResponse.BodyHandlers
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
-
-private const val counterService = "/medusa.counter.v1.CounterService"
-
-private val apiJson = Json { ignoreUnknownKeys = true }
-
-/** The CounterService responses — all three RPCs return just the current count (proto3 JSON). */
-@Serializable internal data class CountResponse(val count: Int = 0)
-
-class ApiException(val statusCode: Int, message: String) : Exception(message)
+import io.grpc.Grpc
+import io.grpc.InsecureChannelCredentials
+import io.grpc.ManagedChannel
+import io.grpc.Metadata
+import io.grpc.Status
+import io.grpc.StatusRuntimeException
+import io.grpc.TlsChannelCredentials
+import io.grpc.stub.MetadataUtils
+import java.util.concurrent.TimeUnit
+import software.medusa.counter.v1.CounterServiceGrpc
+import software.medusa.counter.v1.CounterServiceGrpc.CounterServiceBlockingStub
+import software.medusa.counter.v1.DecrementRequest
+import software.medusa.counter.v1.GetCountRequest
+import software.medusa.counter.v1.IncrementRequest
 
 /**
- * Talks to CounterService over its unframed (Connect/JSON) endpoint — a plain HTTPS POST of the
- * request message as JSON, with the caller's Google ID token as a bearer credential. The server
- * enables unframed requests (see the backend's Server.kt), so no gRPC client is needed.
+ * Talks to CounterService over gRPC, presenting the caller's Google ID token as a bearer credential
+ * on every call. The token is fetched (and silently refreshed) via [idTokenProvider] just before
+ * each request, so a lapsed session surfaces as [NotLoggedInException] rather than a gRPC error.
+ * [close] shuts the channel down — the CLI uses one client per command.
  */
-class CounterApiClient(
-    private val baseUrl: String,
-    private val idTokenProvider: IdTokenProvider,
-    private val httpClient: HttpClient = HttpClient.newHttpClient(),
-) {
-  fun getCount(): Int = count("GetCount")
+class CounterApiClient(endpoint: ApiEndpoint, private val idTokenProvider: IdTokenProvider) :
+    AutoCloseable {
+  private val channel: ManagedChannel = channelFor(endpoint)
+  private val stub: CounterServiceBlockingStub = CounterServiceGrpc.newBlockingStub(channel)
 
-  fun increment(): Int = count("Increment")
+  fun getCount(): Int = call { authed().getCount(GetCountRequest.getDefaultInstance()).count }
 
-  fun decrement(): Int = count("Decrement")
+  fun increment(): Int = call { authed().increment(IncrementRequest.getDefaultInstance()).count }
 
-  private fun count(method: String): Int =
-      apiJson.decodeFromString<CountResponse>(post(method, "{}")).count
+  fun decrement(): Int = call { authed().decrement(DecrementRequest.getDefaultInstance()).count }
 
-  private fun post(method: String, body: String): String {
-    val request =
-        HttpRequest.newBuilder(URI.create("${baseUrl.trimEnd('/')}$counterService/$method"))
-            .header("Authorization", "Bearer ${idTokenProvider.idToken()}")
-            .header("Content-Type", "application/json")
-            .header("Accept", "application/json")
-            .POST(HttpRequest.BodyPublishers.ofString(body))
-            .build()
-    val response = httpClient.send(request, BodyHandlers.ofString())
-    val status = response.statusCode()
-    if (status == 401 || status == 403) {
-      throw ApiException(
-          status,
-          "The API rejected your identity (HTTP $status). Your session may have lapsed, or your " +
-              "account isn't allowed — try 'ms-counter login' again.",
-      )
+  /**
+   * The stub with a fresh bearer token attached; fetching the token may throw
+   * [NotLoggedInException].
+   */
+  private fun authed(): CounterServiceBlockingStub {
+    val headers = Metadata().apply { put(AUTHORIZATION, "Bearer ${idTokenProvider.idToken()}") }
+    return stub.withInterceptors(MetadataUtils.newAttachHeadersInterceptor(headers))
+  }
+
+  private inline fun <T> call(block: () -> T): T =
+      try {
+        block()
+      } catch (e: StatusRuntimeException) {
+        throw asApiException(e)
+      }
+
+  override fun close() {
+    channel.shutdownNow()
+    channel.awaitTermination(SHUTDOWN_TIMEOUT_SEC, TimeUnit.SECONDS)
+  }
+
+  companion object {
+    private const val SHUTDOWN_TIMEOUT_SEC = 5L
+
+    private val AUTHORIZATION: Metadata.Key<String> =
+        Metadata.Key.of("Authorization", Metadata.ASCII_STRING_MARSHALLER)
+
+    private fun channelFor(endpoint: ApiEndpoint): ManagedChannel {
+      val credentials =
+          if (endpoint.useTls) TlsChannelCredentials.create()
+          else InsecureChannelCredentials.create()
+      return Grpc.newChannelBuilderForAddress(endpoint.host, endpoint.port, credentials).build()
     }
-    if (status !in 200..299) {
-      throw ApiException(status, "API error (HTTP $status): ${response.body().take(500)}")
-    }
-    return response.body()
+
+    private fun asApiException(e: StatusRuntimeException): ApiException =
+        when (e.status.code) {
+          Status.Code.UNAUTHENTICATED,
+          Status.Code.PERMISSION_DENIED ->
+              ApiException(
+                  "The API rejected your identity (${e.status.code}). Your session may have lapsed, " +
+                      "or your account isn't allowed — try 'ms-counter login' again."
+              )
+          else -> ApiException("API error (${e.status.code}): ${e.status.description ?: e.message}")
+        }
   }
 }
