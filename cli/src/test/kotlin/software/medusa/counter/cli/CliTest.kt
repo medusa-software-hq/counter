@@ -1,5 +1,6 @@
 package software.medusa.counter.cli
 
+import java.nio.file.Path
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -44,9 +45,13 @@ class EnvironmentTest {
 
   @Test
   fun `prod and staging are fully partitioned`() {
-    assertTrue(Environment.Prod.configDir.endsWith("prod"))
-    assertTrue(Environment.Staging.configDir.endsWith("staging"))
-    assertNotEquals(Environment.Prod.configDir, Environment.Staging.configDir)
+    val base = Path.of("/base")
+    assertEquals(Path.of("/base/prod"), Environment.Prod.resolveConfigDirPath(base))
+    assertEquals(Path.of("/base/staging"), Environment.Staging.resolveConfigDirPath(base))
+    assertNotEquals(
+        Environment.Prod.resolveConfigDirPath(base),
+        Environment.Staging.resolveConfigDirPath(base),
+    )
     // Separate OAuth clients per environment — the credential boundary is the environment boundary.
     assertNotEquals(Environment.Prod.oauthClientId, Environment.Staging.oauthClientId)
     assertEquals(null, Environment.Prod.marker)

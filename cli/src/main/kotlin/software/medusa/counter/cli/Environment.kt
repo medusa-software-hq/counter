@@ -2,29 +2,6 @@ package software.medusa.counter.cli
 
 import java.nio.file.Path
 
-private const val configDirName = "ms-counter"
-
-/**
- * The base state directory, shared by every environment: `$XDG_CONFIG_HOME/ms-counter` or, when
- * that's unset, `~/.config/ms-counter` (also on macOS). Each [Environment] owns a partitioned
- * subdirectory (or, for [Environment.Local], a caller-supplied path) beneath this.
- */
-internal fun configBaseDir(
-    xdgConfigHome: String? = System.getenv("XDG_CONFIG_HOME"),
-    userHome: String = System.getProperty("user.home"),
-): Path {
-  val base =
-      if (!xdgConfigHome.isNullOrBlank()) Path.of(xdgConfigHome) else Path.of(userHome, ".config")
-  return base.resolve(configDirName)
-}
-
-/** Raised when `COUNTER_ENVIRONMENT` (or a `local`-only variable) is set to something unusable. */
-class EnvironmentSelectionException(message: String) : Exception(message)
-
-/** [text] wrapped in ANSI dim, but only when stderr is an interactive terminal (else plain). */
-internal fun dimmedForStderr(text: String): String =
-    if (System.console() != null) "[2m$text[22m" else text
-
 /**
  * The closed set of environments a single CLI invocation runs against, selected **once** by the
  * `COUNTER_ENVIRONMENT` session property (`AWS_PROFILE`-style — deliberately no per-command flag; a
@@ -43,8 +20,11 @@ sealed interface Environment {
    */
   val label: String
 
-  /** This environment's private state directory — never shared. */
-  val configDir: Path
+  /**
+   * This environment's private state directory beneath a resolved [baseConfigPath] — never shared.
+   * Prod/staging partition by [label]; [Local] uses its own explicit path and ignores the base.
+   */
+  fun resolveConfigDirPath(baseConfigPath: Path): Path
 
   /** The one backend endpoint for this environment. */
   val apiEndpoint: ApiEndpoint
@@ -67,9 +47,11 @@ sealed interface Environment {
 
   data object Prod : Environment {
     override val label = "prod"
-    override val configDir: Path = configBaseDir().resolve(label)
     override val apiEndpoint =
         ApiEndpoint("api.counter-baseline.medusa.software", 443, useTls = true)
+
+    override fun resolveConfigDirPath(baseConfigPath: Path): Path = baseConfigPath.resolve(label)
+
     override val oauthClientId =
         "390879863874-2lni09664lo24g44kakjceu2j7s164nr.apps.googleusercontent.com"
     override val oauthClientSecretEnvVar = "COUNTER_CLI_OAUTH_CLIENT_SECRET"
@@ -83,9 +65,11 @@ sealed interface Environment {
 
   data object Staging : Environment {
     override val label = "staging"
-    override val configDir: Path = configBaseDir().resolve(label)
     override val apiEndpoint =
         ApiEndpoint("api.counter-baseline-staging.medusa.software", 443, useTls = true)
+
+    override fun resolveConfigDirPath(baseConfigPath: Path): Path = baseConfigPath.resolve(label)
+
     override val oauthClientId =
         "1099281545285-smp4hh6b1rec63qgblp6apgbe534kpdd.apps.googleusercontent.com"
     override val oauthClientSecretEnvVar = "COUNTER_CLI_OAUTH_CLIENT_SECRET_STAGING"
@@ -103,7 +87,7 @@ sealed interface Environment {
    * accepted audience is irrelevant — [oauthClientId]/[oauthClientSecret] mirror prod's only so a
    * local `login` attempt has *something* to present.
    */
-  data class Local(override val configDir: Path, val port: Int) : Environment {
+  data class Local(private val configDir: Path, val port: Int) : Environment {
     override val label = "local"
     override val apiEndpoint = ApiEndpoint("127.0.0.1", port, useTls = false)
     override val oauthClientId = Prod.oauthClientId
@@ -112,6 +96,9 @@ sealed interface Environment {
       get() = Prod.oauthClientSecret
 
     override val marker = "[local]"
+
+    /** Local uses its caller-supplied config path directly; the shared base is irrelevant here. */
+    override fun resolveConfigDirPath(baseConfigPath: Path): Path = configDir
   }
 
   companion object {

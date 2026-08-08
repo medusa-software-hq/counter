@@ -11,6 +11,7 @@ import com.github.ajalt.clikt.core.requireObject
 import com.github.ajalt.clikt.core.subcommands
 import com.nimbusds.oauth2.sdk.auth.Secret
 import com.nimbusds.oauth2.sdk.id.ClientID
+import java.nio.file.Path
 import kotlin.system.exitProcess
 
 class MainCommand : NoOpCliktCommand(name = "ms-counter") {
@@ -49,7 +50,15 @@ fun main(args: Array<String>) {
  * An authenticated client for this environment (its endpoint + its cached, silently-refreshed
  * token).
  */
-private fun Environment.configStore(): ConfigStore = ConfigStore(configDir)
+/** [text] wrapped in ANSI dim, but only when stderr is an interactive terminal (else plain). */
+private fun dimmedForStderr(text: String): String =
+    if (System.console() != null) "[2m$text[22m" else text
+
+private fun counterConfigBase(): Path =
+    ConfigBaseDir.resolve(System.getenv("XDG_CONFIG_HOME"), System.getProperty("user.home"))
+
+private fun Environment.configStore(): ConfigStore =
+    ConfigStore(resolveConfigDirPath(counterConfigBase()))
 
 private fun Environment.apiClient(): CounterApiClient =
     CounterApiClient(apiEndpoint, Session(configStore(), refresher = DefaultTokenRefresher(this)))
