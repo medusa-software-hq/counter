@@ -8,11 +8,21 @@ import com.nimbusds.oauth2.sdk.id.State
 import com.nimbusds.oauth2.sdk.pkce.CodeChallengeMethod
 import com.nimbusds.oauth2.sdk.pkce.CodeVerifier
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest
+import com.nimbusds.openid.connect.sdk.OIDCScopeValue
+import com.nimbusds.openid.connect.sdk.Prompt
 import java.net.URI
 import java.time.Duration
 
 /** How long the loopback receiver waits for Google's browser redirect before giving up. */
 private val CALLBACK_TIMEOUT: Duration = Duration.ofMinutes(5)
+
+// Google-proprietary authorization parameter — NOT part of OAuth 2.0 or OpenID Connect. Requesting
+// "offline" access is how Google is told to issue a refresh token, so the CLI can mint fresh ID
+// tokens without a browser. Combined with the standard OIDC prompt=consent (below), it makes Google
+// return a refresh token reliably — not only on the user's very first consent.
+// https://developers.google.com/identity/protocols/oauth2/web-server#offline
+private const val googleAccessTypeParam = "access_type"
+private const val googleAccessTypeOffline = "offline"
 
 /**
  * The interactive Google sign-in: authorization-code + PKCE over a localhost loopback (RFC 8252).
@@ -60,16 +70,17 @@ private fun googleAuthorizationUrl(
     state: State,
 ): URI =
     AuthenticationRequest.Builder(
-            ResponseType("code"),
-            Scope("openid", "email"),
+            ResponseType(ResponseType.Value.CODE), // OAuth 2.0 authorization code grant (RFC 6749)
+            Scope(OIDCScopeValue.OPENID, OIDCScopeValue.EMAIL), // OIDC scopes (OIDC Core §5.4)
             clientId,
             redirectUri,
         )
         .endpointURI(authEndpoint)
         .state(state)
-        .codeChallenge(codeVerifier, CodeChallengeMethod.S256)
-        // Ask for a refresh token, and force the consent screen so we reliably get one.
-        .customParameter("access_type", "offline")
-        .customParameter("prompt", "consent")
+        .codeChallenge(codeVerifier, CodeChallengeMethod.S256) // PKCE (RFC 7636)
+        // Force re-consent so Google reliably returns a refresh token — standard OIDC parameter
+        // (OIDC Core §3.1.2.1), unlike access_type below.
+        .prompt(Prompt(Prompt.Type.CONSENT))
+        .customParameter(googleAccessTypeParam, googleAccessTypeOffline)
         .build()
         .toURI()
