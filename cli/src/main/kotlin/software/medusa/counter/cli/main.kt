@@ -47,11 +47,13 @@ fun main(args: Array<String>) {
  * An authenticated client for this environment (its endpoint + its cached, silently-refreshed
  * token).
  */
+private fun Environment.configStore(): ConfigStore = ConfigStore(configDir)
+
 private fun Environment.apiClient(): CounterApiClient =
     CounterApiClient(
         apiBaseUrl,
         idTokenProvider = {
-          Session(dir = configDir, refresher = defaultRefresher(this)).currentIdToken()
+          Session(configStore(), refresher = defaultRefresher(this)).currentIdToken()
         },
     )
 
@@ -99,10 +101,10 @@ class LoginCommand : CliktCommand(name = "login") {
                 printError = true,
             )
     val email = JwtToken.parse(tokens.idToken).email ?: "unknown"
-    saveCredentials(
-        Credentials(refreshToken, tokens.idToken, tokens.expiresAtEpochSec, email),
-        env.configDir,
-    )
+    env.configStore()
+        .saveCredentials(
+            Credentials(refreshToken, tokens.idToken, tokens.expiresAtEpochSec, email)
+        )
     echo("Signed in as $email")
   }
 }
@@ -114,7 +116,7 @@ class LogoutCommand : CliktCommand(name = "logout") {
   override fun help(context: Context) = "Forget the cached session on this machine."
 
   override fun run() {
-    deleteCredentials(env.configDir)
+    env.configStore().deleteCredentials()
     echo("Signed out.")
   }
 }
