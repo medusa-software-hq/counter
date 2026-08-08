@@ -9,6 +9,7 @@ plugins {
 dependencies {
   implementation(libs.clikt)
   implementation(libs.kotlinx.serialization.json)
+  implementation(libs.nimbus.oauth2.oidc.sdk)
 
   testImplementation(libs.kotlin.test)
 }

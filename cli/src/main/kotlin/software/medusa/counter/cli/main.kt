@@ -9,6 +9,8 @@ import com.github.ajalt.clikt.core.main
 import com.github.ajalt.clikt.core.obj
 import com.github.ajalt.clikt.core.requireObject
 import com.github.ajalt.clikt.core.subcommands
+import com.nimbusds.oauth2.sdk.auth.Secret
+import com.nimbusds.oauth2.sdk.id.ClientID
 import kotlin.system.exitProcess
 
 class MainCommand : NoOpCliktCommand(name = "ms-counter") {
@@ -83,9 +85,11 @@ class LoginCommand : CliktCommand(name = "login") {
                 printError = true,
             )
 
+    val clientId = ClientID(env.oauthClientId)
+    val tokenClient = OAuth2TokenClient(GoogleOAuth.TOKEN_ENDPOINT, clientId, Secret(secret))
     val tokens =
         try {
-          CounterOAuth(clientId = env.oauthClientId, clientSecret = secret)
+          GoogleSignInFlow(GoogleOAuth.AUTH_ENDPOINT, clientId, tokenClient, SystemBrowserOpener)
               .login(echo = { echo(it) })
         } catch (e: OAuthException) {
           throw PrintMessage("Sign-in failed: ${e.message}", statusCode = 1, printError = true)
@@ -100,9 +104,7 @@ class LoginCommand : CliktCommand(name = "login") {
             )
     val email = JwtToken.parse(tokens.idToken).email ?: "unknown"
     env.configStore()
-        .saveCredentials(
-            Credentials(refreshToken, tokens.idToken, tokens.expiresAtEpochSec, email)
-        )
+        .saveCredentials(Credentials(refreshToken, tokens.idToken, tokens.expiresAtEpochSec, email))
     echo("Signed in as $email")
   }
 }

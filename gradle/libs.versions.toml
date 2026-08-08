@@ -12,6 +12,7 @@ kotlinx-serialization = "1.9.0"
 ktfmt = "0.26.0"
 logback = "1.5.32"
 nimbus-jose-jwt = "10.9"
+nimbus-oauth2-oidc-sdk = "11.38.2"
 postgresql = "42.7.8"
 protobuf = "4.34.1"
 protobuf-plugin = "0.10.0"
@@ -37,6 +38,7 @@ kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-c
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 nimbus-jose-jwt = { module = "com.nimbusds:nimbus-jose-jwt", version.ref = "nimbus-jose-jwt" }
+nimbus-oauth2-oidc-sdk = { module = "com.nimbusds:oauth2-oidc-sdk", version.ref = "nimbus-oauth2-oidc-sdk" }
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
 protobuf-kotlin = { module = "com.google.protobuf:protobuf-kotlin", version.ref = "protobuf" }
 protobuf-protoc = { module = "com.google.protobuf:protoc", version.ref = "protobuf" }

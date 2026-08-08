@@ -1,5 +1,8 @@
 package software.medusa.counter.cli
 
+import com.nimbusds.oauth2.sdk.auth.Secret
+import com.nimbusds.oauth2.sdk.id.ClientID
+
 /**
  * The [TokenRefresher] for an [Environment]: mints a fresh ID token via that environment's OAuth
  * client (its id plus the secret this build resolves for it). Fails with [NotLoggedInException]
@@ -13,6 +16,11 @@ class DefaultTokenRefresher(private val env: Environment) : TokenRefresher {
                 "This CLI build has no OAuth client secret for ${env.label}; set " +
                     "${env.oauthClientSecretEnvVar}."
             )
-    return CounterOAuth(clientId = env.oauthClientId, clientSecret = secret).refresh(refreshToken)
+    return OAuth2TokenClient(
+            GoogleOAuth.TOKEN_ENDPOINT,
+            ClientID(env.oauthClientId),
+            Secret(secret),
+        )
+        .refresh(refreshToken)
   }
 }
