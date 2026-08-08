@@ -1,5 +1,7 @@
 package software.medusa.counter.cli.config
 
+import com.nimbusds.oauth2.sdk.auth.Secret
+import com.nimbusds.oauth2.sdk.id.ClientID
 import java.nio.file.Path
 import software.medusa.counter.cli.api.ApiEndpoint
 
@@ -31,14 +33,14 @@ sealed interface Environment {
   val apiEndpoint: ApiEndpoint
 
   /** The Desktop OAuth client id sign-in presents; the API's accepted CLI audience. */
-  val oauthClientId: String
+  val oauthClientId: ClientID
 
   /**
    * The OAuth client secret for [oauthClientId] — baked at publish, or an env override for a local
    * build, or null if neither is present (`login` then reports how to set it). For a Desktop client
    * Google explicitly does not treat this as confidential.
    */
-  val oauthClientSecret: String?
+  val oauthClientSecret: Secret?
 
   /** The one-line stderr banner a non-prod session prints so a human can't mix environments. */
   val marker: String?
@@ -54,12 +56,13 @@ sealed interface Environment {
     override fun resolveConfigDirPath(baseConfigPath: Path): Path = baseConfigPath.resolve(label)
 
     override val oauthClientId =
-        "390879863874-2lni09664lo24g44kakjceu2j7s164nr.apps.googleusercontent.com"
+        ClientID("390879863874-2lni09664lo24g44kakjceu2j7s164nr.apps.googleusercontent.com")
     override val oauthClientSecretEnvVar = "COUNTER_CLI_OAUTH_CLIENT_SECRET"
-    override val oauthClientSecret: String?
+    override val oauthClientSecret: Secret?
       get() =
-          System.getenv(oauthClientSecretEnvVar)?.ifBlank { null }
-              ?: BuildConfig.bakedProperty("oauthClientSecret")
+          (System.getenv(oauthClientSecretEnvVar)?.ifBlank { null }
+                  ?: BuildConfig.bakedProperty("oauthClientSecret"))
+              ?.let { Secret(it) }
 
     override val marker: String? = null
   }
@@ -72,12 +75,13 @@ sealed interface Environment {
     override fun resolveConfigDirPath(baseConfigPath: Path): Path = baseConfigPath.resolve(label)
 
     override val oauthClientId =
-        "1099281545285-smp4hh6b1rec63qgblp6apgbe534kpdd.apps.googleusercontent.com"
+        ClientID("1099281545285-smp4hh6b1rec63qgblp6apgbe534kpdd.apps.googleusercontent.com")
     override val oauthClientSecretEnvVar = "COUNTER_CLI_OAUTH_CLIENT_SECRET_STAGING"
-    override val oauthClientSecret: String?
+    override val oauthClientSecret: Secret?
       get() =
-          System.getenv(oauthClientSecretEnvVar)?.ifBlank { null }
-              ?: BuildConfig.bakedProperty("stagingOauthClientSecret")
+          (System.getenv(oauthClientSecretEnvVar)?.ifBlank { null }
+                  ?: BuildConfig.bakedProperty("stagingOauthClientSecret"))
+              ?.let { Secret(it) }
 
     override val marker = "[staging]"
   }
@@ -93,7 +97,7 @@ sealed interface Environment {
     override val apiEndpoint = ApiEndpoint("127.0.0.1", port, useTls = false)
     override val oauthClientId = Prod.oauthClientId
     override val oauthClientSecretEnvVar = Prod.oauthClientSecretEnvVar
-    override val oauthClientSecret: String?
+    override val oauthClientSecret: Secret?
       get() = Prod.oauthClientSecret
 
     override val marker = "[local]"

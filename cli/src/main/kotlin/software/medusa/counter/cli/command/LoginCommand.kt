@@ -4,8 +4,6 @@ import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.Context
 import com.github.ajalt.clikt.core.PrintMessage
 import com.github.ajalt.clikt.core.requireObject
-import com.nimbusds.oauth2.sdk.auth.Secret
-import com.nimbusds.oauth2.sdk.id.ClientID
 import software.medusa.counter.cli.auth.GoogleOAuth
 import software.medusa.counter.cli.auth.JwtToken
 import software.medusa.counter.cli.auth.OAuth2TokenClient
@@ -33,8 +31,8 @@ class LoginCommand : CliktCommand(name = "login") {
                 printError = true,
             )
 
-    val clientId = ClientID(env.oauthClientId)
-    val tokenClient = OAuth2TokenClient(GoogleOAuth.TOKEN_ENDPOINT, clientId, Secret(secret))
+    val clientId = env.oauthClientId
+    val tokenClient = OAuth2TokenClient(GoogleOAuth.TOKEN_ENDPOINT, clientId, secret)
     val tokens =
         try {
           googleSignIn(

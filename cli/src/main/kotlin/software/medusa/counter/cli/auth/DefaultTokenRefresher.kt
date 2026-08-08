@@ -1,7 +1,5 @@
 package software.medusa.counter.cli.auth
 
-import com.nimbusds.oauth2.sdk.auth.Secret
-import com.nimbusds.oauth2.sdk.id.ClientID
 import software.medusa.counter.cli.config.Environment
 
 /**
@@ -17,11 +15,7 @@ class DefaultTokenRefresher(private val env: Environment) : TokenRefresher {
                 "This CLI build has no OAuth client secret for ${env.label}; set " +
                     "${env.oauthClientSecretEnvVar}."
             )
-    return OAuth2TokenClient(
-            GoogleOAuth.TOKEN_ENDPOINT,
-            ClientID(env.oauthClientId),
-            Secret(secret),
-        )
+    return OAuth2TokenClient(GoogleOAuth.TOKEN_ENDPOINT, env.oauthClientId, secret)
         .refresh(refreshToken)
   }
 }
