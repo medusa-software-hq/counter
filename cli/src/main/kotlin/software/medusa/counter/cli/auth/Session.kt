@@ -1,12 +1,8 @@
-package software.medusa.counter.cli
+package software.medusa.counter.cli.auth
 
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
-
-/**
- * Raised when there's no usable session — the caller turns it into a "run ms-counter login" hint.
- */
-class NotLoggedInException(message: String) : Exception(message)
+import software.medusa.counter.cli.config.ConfigStore
 
 /**
  * Supplies a currently-valid Google ID token for API calls: hands back the cached one while it's

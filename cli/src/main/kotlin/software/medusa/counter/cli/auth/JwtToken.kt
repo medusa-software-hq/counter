@@ -1,4 +1,4 @@
-package software.medusa.counter.cli
+package software.medusa.counter.cli.auth
 
 import com.nimbusds.jwt.JWTParser
 import kotlin.time.Instant

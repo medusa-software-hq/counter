@@ -1,7 +1,8 @@
-package software.medusa.counter.cli
+package software.medusa.counter.cli.auth
 
 import com.nimbusds.oauth2.sdk.auth.Secret
 import com.nimbusds.oauth2.sdk.id.ClientID
+import software.medusa.counter.cli.config.Environment
 
 /**
  * The [TokenRefresher] for an [Environment]: mints a fresh ID token via that environment's OAuth

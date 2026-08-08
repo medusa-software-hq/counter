@@ -1,4 +1,4 @@
-package software.medusa.counter.cli
+package software.medusa.counter.cli.auth
 
 /**
  * Raised for any failure in the OAuth exchange — carries the OAuth `error` code where there is one.

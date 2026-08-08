@@ -1,4 +1,4 @@
-package software.medusa.counter.cli
+package software.medusa.counter.cli.config
 
 import java.nio.file.Path
 import kotlin.test.Test
@@ -6,6 +6,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
+import software.medusa.counter.cli.api.ApiEndpoint
 
 class EnvironmentTest {
   @Test

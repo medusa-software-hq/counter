@@ -1,4 +1,4 @@
-package software.medusa.counter.cli
+package software.medusa.counter.cli.api
 
 import io.grpc.Grpc
 import io.grpc.InsecureChannelCredentials
@@ -9,6 +9,7 @@ import io.grpc.StatusRuntimeException
 import io.grpc.TlsChannelCredentials
 import io.grpc.stub.MetadataUtils
 import java.util.concurrent.TimeUnit
+import software.medusa.counter.cli.auth.IdTokenProvider
 import software.medusa.counter.v1.CounterServiceGrpc
 import software.medusa.counter.v1.CounterServiceGrpc.CounterServiceBlockingStub
 import software.medusa.counter.v1.DecrementRequest

@@ -1,6 +1,7 @@
-package software.medusa.counter.cli
+package software.medusa.counter.cli.config
 
 import java.nio.file.Path
+import software.medusa.counter.cli.api.ApiEndpoint
 
 /**
  * The closed set of environments a single CLI invocation runs against, selected **once** by the

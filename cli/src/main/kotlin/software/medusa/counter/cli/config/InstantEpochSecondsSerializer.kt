@@ -1,4 +1,4 @@
-package software.medusa.counter.cli
+package software.medusa.counter.cli.config
 
 import kotlin.time.Instant
 import kotlinx.serialization.KSerializer
