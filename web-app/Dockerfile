@@ -30,7 +30,7 @@ RUN npx vite build
 # Build server
 FROM golang:1.26-alpine AS server-builder
 WORKDIR /src
-COPY server/go.mod ./
+COPY server/go.mod server/go.sum ./
 RUN go mod download
 COPY server/ ./
 RUN CGO_ENABLED=0 go build -trimpath -o /server .

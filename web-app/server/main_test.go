@@ -1,6 +1,7 @@
 package main
 
 import (
+	"golang.org/x/oauth2"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -17,7 +18,7 @@ func TestAPIProxyStripsPrefixForwardsHeadersAndSetsHost(t *testing.T) {
 	}))
 	defer backend.Close()
 
-	proxy, err := newAPIProxy(backend.URL)
+	proxy, err := newAPIProxy(backend.URL, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -50,7 +51,7 @@ func TestAPIProxyStripsInjectedIAPHeadersButKeepsAuthorization(t *testing.T) {
 	}))
 	defer backend.Close()
 
-	proxy, err := newAPIProxy(backend.URL)
+	proxy, err := newAPIProxy(backend.URL, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -69,7 +70,7 @@ func TestAPIProxyStripsInjectedIAPHeadersButKeepsAuthorization(t *testing.T) {
 }
 
 func TestNewAPIProxyRejectsNonAbsoluteURL(t *testing.T) {
-	if _, err := newAPIProxy("/api"); err == nil {
+	if _, err := newAPIProxy("/api", nil); err == nil {
 		t.Error("expected an error for a non-absolute upstream")
 	}
 }
@@ -94,5 +95,27 @@ func TestSPAHandlerServesFilesAndFallsBackToIndex(t *testing.T) {
 	h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/some/client/route", nil))
 	if body, _ := io.ReadAll(rec.Result().Body); string(body) != "INDEX" {
 		t.Errorf("client-side route = %q, want INDEX fallback", body)
+	}
+}
+
+func TestAPIProxyPresentsIAPTokenWhenConfigured(t *testing.T) {
+	var authz string
+	backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		authz = r.Header.Get("Authorization")
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer backend.Close()
+
+	src := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: "id-token-for-iap"})
+	proxy, err := newAPIProxy(backend.URL, src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req := httptest.NewRequest(http.MethodPost, "/api/x", nil)
+	req.Header.Set("Authorization", "Bearer browser-token")
+	proxy.ServeHTTP(httptest.NewRecorder(), req)
+
+	if authz != "Bearer id-token-for-iap" {
+		t.Errorf("Authorization = %q, want the IAP token (replacing the browser token)", authz)
 	}
 }
