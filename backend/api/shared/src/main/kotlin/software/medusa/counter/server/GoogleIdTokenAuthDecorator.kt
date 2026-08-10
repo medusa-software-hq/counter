@@ -37,15 +37,36 @@ private const val emailClaim = "email"
 // Google Workspace "hd" (hosted-domain) claim — Google-specific, no library constant.
 private const val hostedDomainClaim = "hd"
 
+// Header Google IAP injects on a verified request, carrying its signed JWT assertion. Absent when
+// IAP is not in front of the service (as today), which is exactly what keeps the Google-token path
+// unchanged in production. https://cloud.google.com/iap/docs/signed-headers-howto
+private const val iapAssertionHeaderName = "x-goog-iap-jwt-assertion"
+
 /**
- * A *Sign in with Google* decorator: verifies a Google-issued ID token, accepts the configured
- * OAuth clients (matched against the token's `aud`), and restricts access to a single Google
- * Workspace / Cloud Identity domain via the `hd` (hosted-domain) claim. Returns 401 on failure.
+ * A dual-mode gate. When a request carries a non-empty [iapAssertionHeaderName] it is verified as a
+ * Google IAP assertion (see [serveIapAssertion]); otherwise it is verified as a *Sign in with
+ * Google* ID token (see [serveGoogleIdToken]) — the pre-IAP path, kept unchanged.
+ *
+ * This is step 1 of the IAP migration: the decorator understands IAP assertions now, while IAP is
+ * still off, so enabling it later is a small reversible flip. With IAP off no assertion header is
+ * present, so production behavior is identical to before. This gate only allows/denies — it does
+ * not produce any identity object (deliberately postponed).
+ *
+ * The *Sign in with Google* path verifies a Google-issued ID token, accepts the configured OAuth
+ * clients (matched against the token's `aud`), and restricts access to a single Google Workspace /
+ * Cloud Identity domain via the `hd` (hosted-domain) claim. Returns 401 on failure.
  */
 class GoogleIdTokenAuthDecorator(
     // Google OAuth client IDs; each value is matched against the token's `aud` claim.
     private val allowedClientIds: Set<String>,
     private val allowedDomain: String,
+    // Verifier for the IAP branch, or null when no IAP audience is configured (the state today):
+    // then any IAP assertion is rejected. Dormant until IAP is enabled in front of the API.
+    private val iapVerifier: IapAssertionVerifier?,
+    // Service-account emails allowed through IAP without an `hd` claim — today just the web
+    // service's
+    // SA, which hops to the API on the browser's behalf. Empty until the flip.
+    private val trustedProxyEmails: Set<String>,
 ) : DecoratingHttpServiceFunction {
   companion object {
     private val logger = org.slf4j.LoggerFactory.getLogger(GoogleIdTokenAuthDecorator::class.java)
@@ -70,6 +91,20 @@ class GoogleIdTokenAuthDecorator(
                   .add(HttpHeaderNames.WWW_AUTHENTICATE, "Bearer error=\"invalid_token\"")
                   .build()
           )
+
+    // IAP-branch denials. 403: the assertion is authentic but the principal is not permitted
+    // (foreign hosted-domain). 401: no acceptable authenticated identity — the assertion failed
+    // verification, no IAP audience is configured, or the principal is neither in-domain nor a
+    // trusted proxy. Neither carries a Bearer challenge: IAP requests do not use bearer
+    // credentials.
+    private val forbidden: HttpResponse
+      get() = HttpResponse.of(HttpStatus.FORBIDDEN)
+
+    private val unauthorized: HttpResponse
+      get() = HttpResponse.of(HttpStatus.UNAUTHORIZED)
+
+    private fun extractIapAssertion(req: HttpRequest): String? =
+        req.headers().get(iapAssertionHeaderName)?.takeIf { it.isNotEmpty() }
 
     private val jwtProcessor = run {
       val jwkSource =
@@ -109,6 +144,70 @@ class GoogleIdTokenAuthDecorator(
   }
 
   override fun serve(
+      delegate: HttpService,
+      ctx: ServiceRequestContext,
+      req: HttpRequest,
+  ): HttpResponse {
+    val iapAssertion = extractIapAssertion(req)
+    return if (iapAssertion != null) serveIapAssertion(delegate, ctx, req, iapAssertion)
+    else serveGoogleIdToken(delegate, ctx, req)
+  }
+
+  // Verify an IAP assertion, then gate on the verified principal. Order matters: check `hd` before
+  // the proxy allowlist, so a mis-set allowlist can never let a human (who always carries `hd`) be
+  // treated as the trusted proxy SA and gain impersonation.
+  private fun serveIapAssertion(
+      delegate: HttpService,
+      ctx: ServiceRequestContext,
+      req: HttpRequest,
+      assertion: String,
+  ): HttpResponse {
+    // No verifier == no IAP audience configured. Fail closed rather than trust an assertion we
+    // cannot bind to this service.
+    val verifier =
+        iapVerifier
+            ?: run {
+              logger.error(
+                  "Rejecting {} {}: IAP assertion presented but no IAP audience is configured",
+                  req.method(),
+                  req.path(),
+              )
+              return unauthorized
+            }
+
+    val claimsSet =
+        verifier.verify(assertion)
+            ?: run {
+              logger.debug(
+                  "Rejecting {} {}: IAP assertion failed verification",
+                  req.method(),
+                  req.path(),
+              )
+              return unauthorized
+            }
+
+    val hd = claimsSet.getStringClaim(hostedDomainClaim)
+    if (hd != null) {
+      // A direct human / CLI principal: allow only from our own Workspace domain.
+      return if (hd == allowedDomain) delegate.serve(ctx, req) else forbidden
+    }
+
+    // No `hd`: the only legitimate case is the web service's SA hopping to the API on the browser's
+    // behalf. Allow it iff its email is on the proxy allowlist.
+    val email = claimsSet.getStringClaim(emailClaim)
+    if (email != null && email in trustedProxyEmails) return delegate.serve(ctx, req)
+
+    // An IAP principal the app does not recognize: no `hd`, not a trusted proxy. Log loudly.
+    logger.error(
+        "Rejecting {} {}: unrecognized IAP principal (email={}, no hd claim)",
+        req.method(),
+        req.path(),
+        email,
+    )
+    return unauthorized
+  }
+
+  private fun serveGoogleIdToken(
       delegate: HttpService,
       ctx: ServiceRequestContext,
       req: HttpRequest,

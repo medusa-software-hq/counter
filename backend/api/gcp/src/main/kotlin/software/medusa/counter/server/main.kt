@@ -7,6 +7,13 @@ private const val allowedDomainEnvVarName = "GOOGLE_ALLOWED_DOMAIN"
 private const val corsOriginRegexEnvVarName = "CORS_ALLOWED_ORIGIN_REGEX"
 private const val databaseUrlEnvVarName = "DATABASE_URL"
 
+// IAP dual-mode config. Both are dormant until Google IAP is enabled in front of the API, so both
+// tolerate being unset/empty: today's deploy sets neither and the IAP branch stays inert.
+//   IAP_API_AUDIENCE     — the API service's IAP audience string; empty ⇒ IAP assertions rejected.
+//   TRUSTED_PROXY_EMAILS — comma-separated SA emails allowed through IAP without an `hd` claim.
+private const val iapApiAudienceEnvVarName = "IAP_API_AUDIENCE"
+private const val trustedProxyEmailsEnvVarName = "TRUSTED_PROXY_EMAILS"
+
 fun main() {
   val port =
       System.getenv(portEnvVarName)?.toIntOrNull()
@@ -34,6 +41,20 @@ fun main() {
       System.getenv(databaseUrlEnvVarName)
           ?: error("$databaseUrlEnvVarName environment variable must be set")
 
+  // Tolerant of unset/empty: an empty audience yields a null verifier (IAP assertions rejected),
+  // and an empty/unset list yields an empty allowlist. The IAP branch is dormant until the flip.
+  val iapApiAudience = System.getenv(iapApiAudienceEnvVarName).orEmpty()
+  val iapVerifier =
+      iapApiAudience.takeIf { it.isNotEmpty() }?.let { IapAssertionVerifier.build(it) }
+
+  val trustedProxyEmails =
+      System.getenv(trustedProxyEmailsEnvVarName)
+          .orEmpty()
+          .split(',')
+          .map { it.trim() }
+          .filter { it.isNotEmpty() }
+          .toSet()
+
   buildServer(
           originRegex = corsOriginRegex,
           port = port,
@@ -41,6 +62,8 @@ fun main() {
               GoogleIdTokenAuthDecorator(
                   allowedClientIds = setOf(webClientId, cliClientId),
                   allowedDomain = allowedDomain,
+                  iapVerifier = iapVerifier,
+                  trustedProxyEmails = trustedProxyEmails,
               ),
           counterStore = PostgresCounterStore.build(databaseUrl),
       )
