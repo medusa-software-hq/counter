@@ -137,18 +137,6 @@ resource "google_iap_web_cloud_run_service_iam_member" "domain_accessor" {
   member                 = "domain:${module.common.organization_domain}"
 }
 
-# Let the CLI's Desktop OAuth client authenticate programmatically (blocked by default under IAP).
-resource "google_iap_settings" "api" {
-  name = "projects/${data.google_project.this.number}/iap_web/cloud_run-${google_cloud_run_v2_service.primary.location}/services/${google_cloud_run_v2_service.primary.name}"
-
-  access_settings {
-    oauth_settings {
-      programmatic_clients = [module.common.google_cli_client_id]
-    }
-  }
-
-  depends_on = [google_cloud_run_v2_service.primary]
-}
 
 output "cloud_run_primary_service_url" {
   value = google_cloud_run_v2_service.primary.uri
