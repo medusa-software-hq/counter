@@ -41,14 +41,15 @@ jobs:
       # The API Cloud Run service is public (allUsers) and exposes /health, so it
       # can be smoked end-to-end over plain HTTP at its published URL. Retry to
       # ride out cold starts and the brief window before a new revision serves.
-      - name: Smoke the API health endpoint
+      # The API is IAP-gated, so /health can't be fetched anonymously (IAP redirects). Assert the
+      # Cloud Run service resolves — a control-plane check; the deploy step already blocks on
+      # revision readiness.
+      - name: Verify the API service is serving
         run: |
-          url="${{ vars.API_URL }}/health"
-          echo "GET $url"
-          code=$(curl -fsS -o /dev/null -w '%{http_code}' \
-            --retry 5 --retry-all-errors --retry-delay 10 --max-time 30 "$url" || true)
-          echo "HTTP $code"
-          test "$code" = "200"
+          gcloud run services describe ${{ vars.GCP_API_RUN_SERVICE_NAME }} \
+            --project=${{ vars.GCP_PROJECT_ID }} \
+            --region=${{ vars.GCP_PRIMARY_LOCATION }} \
+            --format='value(status.url)'
 
       # The web app is IAP-gated, so it can't be fetched anonymously. Assert the
       # Cloud Run service resolves (a control-plane check the CI/CD SA is
