@@ -12,7 +12,6 @@ resource "google_cloud_run_v2_service" "primary" {
   location            = module.common.gcp_primary_location
   deletion_protection = false # This project is experimental
   ingress             = "INGRESS_TRAFFIC_ALL"
-  iap_enabled         = true
 
   template {
     service_account = google_service_account.primary_service_sa.email
@@ -57,16 +56,6 @@ resource "google_cloud_run_v2_service" "primary" {
       }
 
       env {
-        name  = "IAP_API_AUDIENCE"
-        value = local.iap_api_audience
-      }
-
-      env {
-        name  = "TRUSTED_PROXY_EMAILS"
-        value = "${module.common.gcp_web_run_service_name}-sa@${var.gcp_project_id}.iam.gserviceaccount.com"
-      }
-
-      env {
         name = "DATABASE_URL"
         value_source {
           secret_key_ref {
@@ -97,46 +86,14 @@ resource "google_cloud_run_v2_service" "primary" {
   }
 }
 
-data "google_project" "this" {
-  project_id = var.gcp_project_id
-}
-
-locals {
-  # The API's IAP JWT-assertion audience, per environment. Empty until discovered from the enabled
-  # IAP (see the decorator's assertion-audience diagnostic); while empty the gate rejects assertions.
-  iap_api_audience = {
-    prod    = ""
-    staging = ""
-  }[module.common.environment]
-}
-
-# IAP fronts the service; only the IAP service agent may invoke it (no public access).
-resource "google_cloud_run_v2_service_iam_member" "iap_invoker" {
+# Allow unauthenticated (public) access — no auth for now.
+resource "google_cloud_run_v2_service_iam_member" "public_invoker" {
   project  = google_cloud_run_v2_service.primary.project
   location = google_cloud_run_v2_service.primary.location
   name     = google_cloud_run_v2_service.primary.name
   role     = "roles/run.invoker"
-  member   = "serviceAccount:service-${data.google_project.this.number}@gcp-sa-iap.iam.gserviceaccount.com"
+  member   = "allUsers"
 }
-
-# Who may pass IAP: the web service's SA (the same-origin proxy hop) and org-domain users (the CLI).
-# The IAP web-resource IAM requires the project NUMBER, not id (provider issue #23092).
-resource "google_iap_web_cloud_run_service_iam_member" "proxy_accessor" {
-  project                = data.google_project.this.number
-  location               = google_cloud_run_v2_service.primary.location
-  cloud_run_service_name = google_cloud_run_v2_service.primary.name
-  role                   = "roles/iap.httpsResourceAccessor"
-  member                 = "serviceAccount:${module.common.gcp_web_run_service_name}-sa@${var.gcp_project_id}.iam.gserviceaccount.com"
-}
-
-resource "google_iap_web_cloud_run_service_iam_member" "domain_accessor" {
-  project                = data.google_project.this.number
-  location               = google_cloud_run_v2_service.primary.location
-  cloud_run_service_name = google_cloud_run_v2_service.primary.name
-  role                   = "roles/iap.httpsResourceAccessor"
-  member                 = "domain:${module.common.organization_domain}"
-}
-
 
 output "cloud_run_primary_service_url" {
   value = google_cloud_run_v2_service.primary.uri
