@@ -43,16 +43,22 @@ locals {
   check_cli_job_name                    = "CLI"
 }
 
-# Branch protection ruleset for the default branch
-resource "github_repository_ruleset" "default_branch" {
-  name        = "Default branch"
+# Branch protection ruleset for the trunk branches — every `trunk/*` variant
+# (e.g. `trunk/v3`, `trunk/aws`), not just the default one.
+moved {
+  from = github_repository_ruleset.default_branch
+  to   = github_repository_ruleset.trunk_branches
+}
+
+resource "github_repository_ruleset" "trunk_branches" {
+  name        = "Trunk branches"
   repository  = github_repository.this.name
   target      = "branch"
   enforcement = "active"
 
   conditions {
     ref_name {
-      include = ["~DEFAULT_BRANCH"]
+      include = ["refs/heads/trunk/**"]
       exclude = []
     }
   }
