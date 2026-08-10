@@ -80,7 +80,7 @@ jobs:
           build-args: |
             VITE_GOOGLE_CLIENT_ID=${{ vars.GOOGLE_CLIENT_ID }}
             VITE_GOOGLE_HD=${{ vars.GOOGLE_ALLOWED_DOMAIN }}
-            VITE_API_URL=${{ vars.API_URL }}
+            VITE_API_URL=/api
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -90,6 +90,7 @@ jobs:
             --project=${{ vars.GCP_PROJECT_ID }} \
             --region=${{ vars.GCP_PRIMARY_LOCATION }} \
             --image=${{ env.IMAGE_REF }} \
+            --set-env-vars=COUNTER_API_UPSTREAM=${{ vars.API_URL }} \
             --quiet
           gcloud run services describe ${{ vars.GCP_WEB_RUN_SERVICE_NAME }} \
             --project=${{ vars.GCP_PROJECT_ID }} \
@@ -152,7 +153,7 @@ jobs:
           build-args: |
             VITE_GOOGLE_CLIENT_ID=${{ vars.GOOGLE_CLIENT_ID }}
             VITE_GOOGLE_HD=${{ vars.GOOGLE_ALLOWED_DOMAIN }}
-            VITE_API_URL=${{ vars.API_URL }}
+            VITE_API_URL=/api
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -162,6 +163,7 @@ jobs:
             --project=${{ vars.GCP_PROJECT_ID }} \
             --region=${{ vars.GCP_PRIMARY_LOCATION }} \
             --image=${{ env.IMAGE_REF }} \
+            --set-env-vars=COUNTER_API_UPSTREAM=${{ vars.API_URL }} \
             --quiet
           gcloud run services describe ${{ vars.GCP_WEB_RUN_SERVICE_NAME }} \
             --project=${{ vars.GCP_PROJECT_ID }} \
