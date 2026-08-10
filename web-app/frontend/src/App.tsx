@@ -17,7 +17,8 @@ if (!API_URL) {
 }
 
 const transport = createGrpcWebTransport({
-  baseUrl: API_URL,
+  // VITE_API_URL is a same-origin path ("/api"); the transport needs an absolute URL.
+  baseUrl: new URL(API_URL, window.location.origin).toString(),
 });
 
 const client = createClient(CounterService, transport);

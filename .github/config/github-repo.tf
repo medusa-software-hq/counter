@@ -96,7 +96,7 @@ resource "github_repository_ruleset" "default_branch" {
       }
 
       required_check {
-        context        = "${local.check_web_app_impl_job_name} / Check Caddyfile"
+        context        = "${local.check_web_app_impl_job_name} / Check server"
         integration_id = local.gh_actions_integration_id
       }
 

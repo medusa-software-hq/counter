@@ -8,7 +8,6 @@ permissions:
 
 env:
   NODE_VERSION: 24
-  CADDY_VERSION: 2.11.2
   NO_COLOR: 1
 
   APP_PATH: web-app
@@ -46,25 +45,21 @@ jobs:
         run: task build
         working-directory: ${{ env.FRONTEND_PATH }}
 
-  check-caddyfile:
-    name: Check Caddyfile
+  check-server:
+    name: Check server
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v6.0.2
 
-      - uses: ./.github/actions/setup-caddy
+      - uses: actions/setup-go@v5
         with:
-          caddy-version: ${{ env.CADDY_VERSION }}
+          go-version-file: ${{ env.APP_PATH }}/server/go.mod
 
       - uses: go-task/setup-task@v2
 
-      - name: Check formatting
-        run: task caddy:fmt:check
-        working-directory: ${{ env.APP_PATH }}
-
-      - name: Validate
-        run: task caddy:validate
+      - name: Format, vet, test
+        run: task server:fmt:check server:vet server:test
         working-directory: ${{ env.APP_PATH }}
 
   build-image:

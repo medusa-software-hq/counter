@@ -1,47 +1,50 @@
 version: '3'
 
-.caddySources: &caddySources
-  - Caddyfile
-
 includes:
   frontend:
     taskfile: frontend/Taskfile.yml
     dir: frontend
 
 tasks:
-  caddy:fmt:check:
-    desc: Check Caddyfile formatting
-    sources: *caddySources
+  server:fmt:check:
+    desc: Check Go server formatting
+    dir: server
     cmds:
-      - caddy fmt --diff Caddyfile
+      - test -z "$(gofmt -l .)"
 
-  caddy:fmt:fix:
-    desc: Fix Caddyfile formatting
-    sources: *caddySources
+  server:fmt:fix:
+    desc: Format the Go server
+    dir: server
     cmds:
-      - caddy fmt --overwrite Caddyfile
+      - gofmt -w .
 
-  caddy:validate:
-    desc: Validate the Caddyfile
-    sources: *caddySources
+  server:vet:
+    desc: Vet the Go server
+    dir: server
     cmds:
-      - caddy validate --config Caddyfile
+      - go vet ./...
+
+  server:test:
+    desc: Test the Go server
+    dir: server
+    cmds:
+      - go test ./...
 
   fmt:check:
-    desc: Check formatting (frontend + Caddyfile)
-    deps: [frontend:fmt:check, caddy:fmt:check]
+    desc: Check formatting (frontend + Go server)
+    deps: [frontend:fmt:check, server:fmt:check]
 
   fmt:fix:
-    desc: Fix formatting (frontend + Caddyfile)
-    deps: [frontend:fmt:fix, caddy:fmt:fix]
+    desc: Fix formatting (frontend + Go server)
+    deps: [frontend:fmt:fix, server:fmt:fix]
 
   lint:
     desc: Lint the app sources
-    deps: [frontend:lint]
+    deps: [frontend:lint, server:vet]
 
   analyze:
-    desc: Analyze the app sources (frontend typecheck + tests + Caddy validate)
-    deps: [frontend:typecheck, frontend:test, caddy:validate]
+    desc: Analyze the app sources (frontend typecheck + tests; Go server vet + tests)
+    deps: [frontend:typecheck, frontend:test, server:vet, server:test]
 
   build:
     desc: Build the frontend

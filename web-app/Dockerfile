@@ -27,8 +27,17 @@ ENV VITE_API_URL=$VITE_API_URL
 
 RUN npx vite build
 
-# Final Runtime
-FROM caddy:2-alpine
+# Build server
+FROM golang:1.26-alpine AS server-builder
+WORKDIR /src
+COPY server/go.mod ./
+RUN go mod download
+COPY server/ ./
+RUN CGO_ENABLED=0 go build -trimpath -o /server .
 
-COPY Caddyfile /etc/caddy/Caddyfile
+# Final runtime
+FROM gcr.io/distroless/static-debian12
+COPY --from=server-builder /server /server
 COPY --from=frontend-builder /app/dist /srv
+ENV STATIC_DIR=/srv
+ENTRYPOINT ["/server"]
