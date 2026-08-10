@@ -16,6 +16,7 @@ import com.nimbusds.jose.proc.JWSVerificationKeySelector
 import com.nimbusds.jose.proc.SecurityContext
 import com.nimbusds.jwt.JWTClaimNames
 import com.nimbusds.jwt.JWTClaimsSet
+import com.nimbusds.jwt.JWTParser
 import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier
 import com.nimbusds.jwt.proc.DefaultJWTProcessor
 import java.net.URI
@@ -70,6 +71,15 @@ class GoogleIdTokenAuthDecorator(
 ) : DecoratingHttpServiceFunction {
   companion object {
     private val logger = org.slf4j.LoggerFactory.getLogger(GoogleIdTokenAuthDecorator::class.java)
+
+    // Diagnostic only: the assertion's audience without verifying its signature, to surface an
+    // IAP_API_AUDIENCE mismatch in logs. Never a trust input.
+    private fun unverifiedAudience(assertion: String): List<String> =
+        try {
+          JWTParser.parse(assertion).jwtClaimsSet.audience ?: emptyList()
+        } catch (_: ParseException) {
+          emptyList()
+        }
 
     // No usable credential was presented (missing/empty/non-Bearer). Per RFC 6750 §3.1,
     // a request that carries no token gets a bare challenge with no error code.
@@ -168,9 +178,11 @@ class GoogleIdTokenAuthDecorator(
         iapVerifier
             ?: run {
               logger.error(
-                  "Rejecting {} {}: IAP assertion presented but no IAP audience is configured",
+                  "Rejecting {} {}: IAP assertion presented but no IAP audience is configured " +
+                      "(unverified aud={})",
                   req.method(),
                   req.path(),
+                  unverifiedAudience(assertion),
               )
               return unauthorized
             }
