@@ -58,6 +58,12 @@ func newAPIProxy(upstream string) (http.Handler, error) {
 	proxy.Director = func(r *http.Request) {
 		base(r)
 		r.Host = target.Host
+		// This service is IAP-gated, so IAP injects the caller's identity on the inbound request.
+		// Those headers must not reach the API across this hop — it authenticates the request
+		// itself. The IAP flip will set the API's credentials here explicitly instead.
+		r.Header.Del("X-Goog-Iap-Jwt-Assertion")
+		r.Header.Del("X-Goog-Authenticated-User-Email")
+		r.Header.Del("X-Goog-Authenticated-User-Id")
 	}
 	return http.StripPrefix("/api", proxy), nil
 }
