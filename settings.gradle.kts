@@ -6,7 +6,7 @@ plugins {
 rootProject.name = "counter"
 
 include(
-    ":backend:api:gcp",
+    ":backend:api:cloud",
     ":backend:api:local",
     ":backend:api:shared",
     ":cli",
