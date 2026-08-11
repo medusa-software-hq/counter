@@ -64,7 +64,9 @@ resource "github_repository_ruleset" "trunk_branches" {
   }
 
   rules {
-    creation                = true
+    # Creation is allowed: spinning up a new `trunk/*` variant (e.g. trunk/aws)
+    # is a supported workflow. The remaining rules still gate what merges in.
+    creation                = false
     update                  = false
     deletion                = true
     required_linear_history = false
