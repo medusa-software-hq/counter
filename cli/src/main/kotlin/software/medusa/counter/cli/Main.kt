@@ -11,8 +11,7 @@ import software.medusa.counter.cli.command.LoginCommand
 import software.medusa.counter.cli.command.LogoutCommand
 
 class MainCommand : NoOpCliktCommand(name = "ms-counter") {
-  override fun help(context: Context) =
-      "Increment, decrement, and read the counter, authenticated with your Google sign-in."
+  override fun help(context: Context) = "Increment, decrement, and read the counter."
 }
 
 fun main(args: Array<String>) {

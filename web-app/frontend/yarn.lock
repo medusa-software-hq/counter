@@ -944,13 +944,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/google.accounts@npm:^0.0.18":
-  version: 0.0.18
-  resolution: "@types/google.accounts@npm:0.0.18"
-  checksum: 10c0/c8769e1061e6809ad6fcd613f8c08b22a428bab7b3385002151fba6fea4444aaee30aee3d033bb5c75ea5dccbd3af5e38d04811f8737a77c2997566dabc21a49
-  languageName: node
-  linkType: hard
-
 "@types/node@npm:^25.0.0":
   version: 25.9.4
   resolution: "@types/node@npm:25.9.4"
@@ -3408,7 +3401,6 @@ __metadata:
     "@testing-library/jest-dom": "npm:^6.9.1"
     "@testing-library/react": "npm:^16.3.0"
     "@testing-library/user-event": "npm:^14.6.1"
-    "@types/google.accounts": "npm:^0.0.18"
     "@types/node": "npm:^25.0.0"
     "@types/react": "npm:^19.2.14"
     "@types/react-dom": "npm:^19.2.3"

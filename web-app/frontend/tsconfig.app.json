@@ -6,7 +6,6 @@
     "module": "esnext",
     "types": [
       "vite/client",
-      "google.accounts",
       "vitest/globals",
       "@testing-library/jest-dom"
     ],

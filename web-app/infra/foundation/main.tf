@@ -8,32 +8,10 @@ terraform {
     prefix = "projects/counter/baseline/apps/web/foundation" # 🎨 TEMPLATE EJECT: Update the prefix (!)
   }
 
-  required_providers {
-    google = {
-      source  = "hashicorp/google"
-      version = "~> 7.25"
-    }
-    google-beta = {
-      source  = "hashicorp/google-beta"
-      version = "~> 7.25"
-    }
-  }
 }
 
 # Module imports
 
 module "common" {
   source = "../../../infra/common"
-}
-
-# Providers
-
-variable "gcp_project_id" {
-  description = "GCP project ID."
-  type        = string
-}
-
-provider "google" {
-  project = var.gcp_project_id
-  region  = module.common.gcp_primary_location
 }

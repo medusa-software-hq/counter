@@ -47,7 +47,7 @@ fun buildServer(
       .apply {
         http(port)
 
-        // Health check is unauthenticated (used by Cloud Run probes).
+        // Health check is unauthenticated (used by platform health probes).
         service("/health", HealthCheckService.of())
 
         serviceUnder("/", grpcService.decorate(auth).decorate(cors))

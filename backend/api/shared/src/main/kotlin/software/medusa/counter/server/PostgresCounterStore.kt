@@ -29,7 +29,7 @@ class PostgresCounterStore(
                 this.jdbcUrl = jdbcUrl
                 // Register the driver explicitly instead of relying on
                 // DriverManager's ServiceLoader auto-registration, which is
-                // unreliable in the packaged Cloud Run image (it fails with
+                // unreliable in the packaged container image (it fails with
                 // "No suitable driver" even though pgjdbc is on the classpath).
                 driverClassName = "org.postgresql.Driver"
                 maximumPoolSize = maxPoolSize

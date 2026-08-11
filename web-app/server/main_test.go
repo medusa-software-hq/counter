@@ -1,7 +1,6 @@
 package main
 
 import (
-	"golang.org/x/oauth2"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -18,7 +17,7 @@ func TestAPIProxyStripsPrefixForwardsHeadersAndSetsHost(t *testing.T) {
 	}))
 	defer backend.Close()
 
-	proxy, err := newAPIProxy(backend.URL, nil)
+	proxy, err := newAPIProxy(backend.URL)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -41,36 +40,8 @@ func TestAPIProxyStripsPrefixForwardsHeadersAndSetsHost(t *testing.T) {
 	}
 }
 
-func TestAPIProxyStripsInjectedIAPHeadersButKeepsAuthorization(t *testing.T) {
-	var iapAssertion, iapUser, authz string
-	backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		iapAssertion = r.Header.Get("X-Goog-Iap-Jwt-Assertion")
-		iapUser = r.Header.Get("X-Goog-Authenticated-User-Email")
-		authz = r.Header.Get("Authorization")
-		w.WriteHeader(http.StatusOK)
-	}))
-	defer backend.Close()
-
-	proxy, err := newAPIProxy(backend.URL, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	req := httptest.NewRequest(http.MethodPost, "/api/x", nil)
-	req.Header.Set("X-Goog-Iap-Jwt-Assertion", "web-iap-assertion")
-	req.Header.Set("X-Goog-Authenticated-User-Email", "accounts.google.com:user@example.com")
-	req.Header.Set("Authorization", "Bearer keep-me")
-	proxy.ServeHTTP(httptest.NewRecorder(), req)
-
-	if iapAssertion != "" || iapUser != "" {
-		t.Errorf("IAP-injected headers leaked to API: assertion=%q user=%q", iapAssertion, iapUser)
-	}
-	if authz != "Bearer keep-me" {
-		t.Errorf("Authorization not forwarded: %q", authz)
-	}
-}
-
 func TestNewAPIProxyRejectsNonAbsoluteURL(t *testing.T) {
-	if _, err := newAPIProxy("/api", nil); err == nil {
+	if _, err := newAPIProxy("/api"); err == nil {
 		t.Error("expected an error for a non-absolute upstream")
 	}
 }
@@ -95,27 +66,5 @@ func TestSPAHandlerServesFilesAndFallsBackToIndex(t *testing.T) {
 	h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/some/client/route", nil))
 	if body, _ := io.ReadAll(rec.Result().Body); string(body) != "INDEX" {
 		t.Errorf("client-side route = %q, want INDEX fallback", body)
-	}
-}
-
-func TestAPIProxyPresentsIAPTokenWhenConfigured(t *testing.T) {
-	var authz string
-	backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		authz = r.Header.Get("Authorization")
-		w.WriteHeader(http.StatusOK)
-	}))
-	defer backend.Close()
-
-	src := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: "id-token-for-iap"})
-	proxy, err := newAPIProxy(backend.URL, src)
-	if err != nil {
-		t.Fatal(err)
-	}
-	req := httptest.NewRequest(http.MethodPost, "/api/x", nil)
-	req.Header.Set("Authorization", "Bearer browser-token")
-	proxy.ServeHTTP(httptest.NewRecorder(), req)
-
-	if authz != "Bearer id-token-for-iap" {
-		t.Errorf("Authorization = %q, want the IAP token (replacing the browser token)", authz)
 	}
 }
