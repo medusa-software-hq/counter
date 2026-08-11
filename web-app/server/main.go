@@ -1,10 +1,8 @@
 // Command server serves the counter web app: the built SPA bundle, and a same-origin reverse proxy
-// from /api to the API service so browser traffic stays single-origin. Minting the API's IAP token
-// for the proxied hop is added at the IAP flip; today it forwards requests unchanged.
+// from /api to the API service so browser traffic stays single-origin.
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -12,9 +10,6 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-
-	"golang.org/x/oauth2"
-	"google.golang.org/api/idtoken"
 )
 
 func main() {
@@ -25,17 +20,7 @@ func main() {
 	if upstream == "" {
 		log.Fatal("COUNTER_API_UPSTREAM must be set to the API service's base URL")
 	}
-	// When the API is IAP-gated, authenticate the proxied hop as this service's own identity with an
-	// ID token minted for the API's IAP OAuth client. Empty audience ⇒ no token (the pre-flip state).
-	var apiToken oauth2.TokenSource
-	if audience := os.Getenv("API_IAP_AUDIENCE"); audience != "" {
-		ts, err := idtoken.NewTokenSource(context.Background(), audience)
-		if err != nil {
-			log.Fatalf("API_IAP_AUDIENCE token source: %v", err)
-		}
-		apiToken = ts
-	}
-	apiProxy, err := newAPIProxy(upstream, apiToken)
+	apiProxy, err := newAPIProxy(upstream)
 	if err != nil {
 		log.Fatalf("invalid COUNTER_API_UPSTREAM: %v", err)
 	}
@@ -58,8 +43,8 @@ func envOr(key, fallback string) string {
 }
 
 // newAPIProxy reverse-proxies /api/* to the API at upstream, stripping the /api prefix and setting
-// the upstream Host — Cloud Run selects the target service by Host/SNI.
-func newAPIProxy(upstream string, apiToken oauth2.TokenSource) (http.Handler, error) {
+// the upstream Host so the platform routes by Host/SNI.
+func newAPIProxy(upstream string) (http.Handler, error) {
 	target, err := url.Parse(upstream)
 	if err != nil {
 		return nil, err
@@ -72,19 +57,6 @@ func newAPIProxy(upstream string, apiToken oauth2.TokenSource) (http.Handler, er
 	proxy.Director = func(r *http.Request) {
 		base(r)
 		r.Host = target.Host
-		// This service is IAP-gated, so IAP injects the caller's identity on the inbound request.
-		// Those headers must not reach the API across this hop — it authenticates the request
-		// itself. The IAP flip will set the API's credentials here explicitly instead.
-		r.Header.Del("X-Goog-Iap-Jwt-Assertion")
-		r.Header.Del("X-Goog-Authenticated-User-Email")
-		r.Header.Del("X-Goog-Authenticated-User-Id")
-		// Once the API is IAP-gated, present this service's ID token to its IAP, replacing the
-		// browser's token. Cached and refreshed by the source, so calling per request is cheap.
-		if apiToken != nil {
-			if t, err := apiToken.Token(); err == nil {
-				r.Header.Set("Authorization", "Bearer "+t.AccessToken)
-			}
-		}
 	}
 	return http.StripPrefix("/api", proxy), nil
 }
