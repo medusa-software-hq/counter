@@ -13,10 +13,6 @@ terraform {
   }
 
   required_providers {
-    google = {
-      source  = "hashicorp/google"
-      version = "~> 7.25"
-    }
     cloudflare = {
       source  = "cloudflare/cloudflare"
       version = "~> 5.18"
@@ -31,16 +27,6 @@ module "common" {
 }
 
 # Providers
-
-variable "gcp_project_id" {
-  description = "GCP project ID."
-  type        = string
-}
-
-provider "google" {
-  project = var.gcp_project_id
-  region  = module.common.gcp_primary_location
-}
 
 # Cloudflare provider for managing DNS records
 

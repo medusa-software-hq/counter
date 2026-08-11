@@ -31,3 +31,10 @@ locals {
     "&password=", urlencode(neon_project.main.database_password),
   ])
 }
+
+# The foundation's natural interface: the DB connection string the compute/secret
+# layer consumes to reach this environment's Neon database.
+output "database_jdbc_url" {
+  value     = local.database_jdbc_url
+  sensitive = true
+}
