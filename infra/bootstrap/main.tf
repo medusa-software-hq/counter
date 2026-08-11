@@ -7,6 +7,17 @@
 terraform {
   required_version = ">= 1.14"
 
+  # After the first apply (which creates this bucket with local state), the
+  # bootstrap keeps its own state here too. A brand-new bootstrap runs the first
+  # apply with `-backend=false`, then `init -migrate-state` (see README).
+  backend "s3" {
+    bucket       = "ms-counter-tfstate-682544514886"
+    key          = "bootstrap/terraform.tfstate"
+    region       = "eu-central-1"
+    encrypt      = true
+    use_lockfile = true
+  }
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"
