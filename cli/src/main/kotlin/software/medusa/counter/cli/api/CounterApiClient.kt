@@ -7,7 +7,7 @@ import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import io.grpc.TlsChannelCredentials
 import java.util.concurrent.TimeUnit
-import software.medusa.counter.cli.auth.IdTokenProvider
+import software.medusa.counter.cli.auth.TokenProvider
 import software.medusa.counter.v1.CounterServiceGrpc
 import software.medusa.counter.v1.CounterServiceGrpc.CounterServiceBlockingStub
 import software.medusa.counter.v1.DecrementRequest
@@ -16,15 +16,14 @@ import software.medusa.counter.v1.IncrementRequest
 
 /**
  * Talks to CounterService over gRPC. A [BearerTokenInterceptor] — attached to the stub once — puts
- * the caller's Google ID token on every call, fetched (and silently refreshed) via
- * [idTokenProvider] as the call starts, so a lapsed session surfaces as NotLoggedInException rather
- * than a gRPC error. [close] shuts the channel down — the CLI uses one client per command.
+ * the caller's bearer token (when one is configured) on every call, fetched via [tokenProvider] as
+ * the call starts. [close] shuts the channel down — the CLI uses one client per command.
  */
-class CounterApiClient(endpoint: ApiEndpoint, idTokenProvider: IdTokenProvider) : AutoCloseable {
+class CounterApiClient(endpoint: ApiEndpoint, tokenProvider: TokenProvider) : AutoCloseable {
   private val channel: ManagedChannel = channelFor(endpoint)
   private val stub: CounterServiceBlockingStub =
       CounterServiceGrpc.newBlockingStub(channel)
-          .withInterceptors(BearerTokenInterceptor(idTokenProvider))
+          .withInterceptors(BearerTokenInterceptor(tokenProvider))
 
   fun getCount(): Int = call { stub.getCount(GetCountRequest.getDefaultInstance()).count }
 

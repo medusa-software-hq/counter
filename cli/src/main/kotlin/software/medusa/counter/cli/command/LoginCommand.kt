@@ -1,48 +1,35 @@
 package software.medusa.counter.cli.command
 
 import com.github.ajalt.clikt.core.Context
-import com.github.ajalt.clikt.core.PrintMessage
-import software.medusa.counter.cli.auth.GoogleOAuth
-import software.medusa.counter.cli.auth.JwtToken
-import software.medusa.counter.cli.auth.OAuthException
-import software.medusa.counter.cli.auth.OAuthTokenClient
-import software.medusa.counter.cli.auth.SystemBrowserOpener
-import software.medusa.counter.cli.auth.googleSignIn
+import com.github.ajalt.clikt.parameters.arguments.argument
+import com.github.ajalt.clikt.parameters.arguments.optional
 import software.medusa.counter.cli.config.ConfigStore
 import software.medusa.counter.cli.config.Credentials
 import software.medusa.counter.cli.config.Environment
 
-/** `login` — the loopback + PKCE browser sign-in; caches the refresh token for this environment. */
+/**
+ * `login` — a dev placeholder while real sign-in is being ported. Real identity (a Cognito device
+ * flow) lands in a later issue; for now the backend runs no-op auth, so this optionally caches a
+ * dev bearer token for this environment and otherwise does nothing.
+ */
 class LoginCommand : AppCommand(name = "login") {
   override fun help(context: Context) =
-      "Sign in with your medusa.software Google account and cache the session."
+      "Cache a dev bearer token for this environment (real sign-in is not wired up yet)."
+
+  private val token: String? by
+      argument(name = "DEV_TOKEN", help = "Optional dev bearer token to cache.").optional()
 
   override fun run(environment: Environment, configStore: ConfigStore) {
-    val clientId = environment.oauthClientId
-    val tokenClient =
-        OAuthTokenClient(GoogleOAuth.TOKEN_ENDPOINT, clientId, environment.oauthClientSecret)
-    val tokens =
-        try {
-          googleSignIn(
-              GoogleOAuth.AUTH_ENDPOINT,
-              clientId,
-              tokenClient,
-              SystemBrowserOpener,
-              echo = { echo(it) },
-          )
-        } catch (e: OAuthException) {
-          throw PrintMessage("Sign-in failed: ${e.message}", statusCode = 1, printError = true)
-        }
-
-    val refreshToken =
-        tokens.refreshToken
-            ?: throw PrintMessage(
-                "Google did not return a refresh token, so the session can't be cached. Try again.",
-                statusCode = 1,
-                printError = true,
-            )
-    val email = JwtToken.parse(tokens.idToken).email ?: "unknown"
-    configStore.saveCredentials(Credentials(refreshToken, tokens.idToken, tokens.expiresAt, email))
-    echo("Signed in as $email")
+    val devToken = token
+    if (devToken == null) {
+      echo(
+          "Real sign-in is not wired up yet (a Cognito device flow lands in a later issue). " +
+              "The backend accepts unauthenticated calls for now, so you can run commands " +
+              "without logging in, or pass a dev token to cache: 'ms-counter login <DEV_TOKEN>'."
+      )
+      return
+    }
+    configStore.saveCredentials(Credentials(devToken))
+    echo("Cached a dev token for the ${environment.label} environment.")
   }
 }

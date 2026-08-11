@@ -50,8 +50,6 @@ class EnvironmentTest {
         Environment.Prod.resolveConfigDirPath(base),
         Environment.Staging.resolveConfigDirPath(base),
     )
-    // Separate OAuth clients per environment — the credential boundary is the environment boundary.
-    assertNotEquals(Environment.Prod.oauthClientId, Environment.Staging.oauthClientId)
     assertEquals(null, Environment.Prod.marker)
     assertEquals("[staging]", Environment.Staging.marker)
   }

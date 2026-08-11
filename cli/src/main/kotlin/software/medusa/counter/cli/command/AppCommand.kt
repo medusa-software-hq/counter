@@ -4,7 +4,6 @@ import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.PrintMessage
 import java.nio.file.Path
 import software.medusa.counter.cli.api.ApiException
-import software.medusa.counter.cli.auth.NotLoggedInException
 import software.medusa.counter.cli.config.ConfigBaseDir
 import software.medusa.counter.cli.config.ConfigStore
 import software.medusa.counter.cli.config.Environment
@@ -36,8 +35,6 @@ abstract class AppCommand(name: String) : CliktCommand(name = name) {
 
     try {
       run(environment, configStore)
-    } catch (e: NotLoggedInException) {
-      throw PrintMessage(e.message ?: "Not signed in.", statusCode = 1, printError = true)
     } catch (e: ApiException) {
       throw PrintMessage(e.message ?: "API error.", statusCode = 1, printError = true)
     }

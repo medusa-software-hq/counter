@@ -16,7 +16,6 @@ sourceSets { main { proto { srcDir(rootDir.resolve("proto")) } } }
 dependencies {
   implementation(libs.clikt)
   implementation(libs.kotlinx.serialization.json)
-  implementation(libs.nimbus.oauth2.oidc.sdk)
 
   implementation(platform(libs.grpc.bom))
   implementation(libs.grpc.protobuf)
@@ -45,34 +44,6 @@ application {
   // same).
   applicationDefaultJvmArgs = listOf("--enable-native-access=ALL-UNNAMED")
 }
-
-// Bake the per-environment OAuth client secrets into the fat jar as a resource. The Publish CLI
-// workflow passes them via `-PcliOauthClientSecret` (prod) / `-PcliStagingOauthClientSecret`
-// (staging), from Actions secrets. Absent locally → empty values, and each Environment falls back
-// to
-// its `oauthClientSecretEnvVar`, so dev builds still work. Backend URLs + client ids are NOT baked
-// —
-// they're deterministic public source constants on Environment. Neither secret is ever committed.
-val cliBuildConfigDir = layout.buildDirectory.dir("generated/cliBuildConfig")
-
-val generateCliBuildConfig by tasks.registering {
-  val prodSecret = providers.gradleProperty("cliOauthClientSecret").orElse("")
-  val stagingSecret = providers.gradleProperty("cliStagingOauthClientSecret").orElse("")
-  inputs.property("prodSecret", prodSecret)
-  inputs.property("stagingSecret", stagingSecret)
-  outputs.dir(cliBuildConfigDir)
-  doLast {
-    val file = cliBuildConfigDir.get().file("counter-cli-build.properties").asFile
-    file.parentFile.mkdirs()
-    // GOCSPX-… secrets are properties-safe. Written by hand to avoid Properties.store's date
-    // comment.
-    file.writeText(
-        "oauthClientSecret=${prodSecret.get()}\nstagingOauthClientSecret=${stagingSecret.get()}\n"
-    )
-  }
-}
-
-sourceSets.named("main") { resources.srcDir(generateCliBuildConfig) }
 
 tasks.shadowJar {
   archiveBaseName = "counter-cli"
