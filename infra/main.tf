@@ -3,9 +3,15 @@
 terraform {
   required_version = ">= 1.14"
 
-  backend "gcs" {
-    bucket = "ms-tfstate-c1984596bdabf023"
-    prefix = "projects/counter/baseline/root" # 🎨 TEMPLATE EJECT: Update the prefix (!)
+  # State bucket is created by infra/bootstrap; the name is hard-coded there too
+  # (backend blocks take no variables). The default workspace (prod) keys at
+  # `root/…`; other workspaces get an `env:/<workspace>/` prefix.
+  backend "s3" {
+    bucket       = "ms-counter-tfstate-682544514886"
+    key          = "root/terraform.tfstate"
+    region       = "eu-central-1"
+    encrypt      = true
+    use_lockfile = true
   }
 
   required_providers {
